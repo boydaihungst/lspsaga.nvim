@@ -95,6 +95,7 @@ local default_config = {
       tabnew = 'r',
       quit = 'q',
       close = '<C-c>k',
+      go_peek = 'l',
     },
   },
   definition = {
@@ -203,18 +204,7 @@ function saga.setup(opts)
   if saga.config.lightbulb.enable then
     require('lspsaga.codeaction.lightbulb').lb_autocmd()
   end
-
-  if vim.version().minor >= 10 and vim.fn.exists('##LspNotify') ~= 0 then
-    require('lspsaga.symbol.head'):register_module()
-  else
-    if vim.version().minor >= 10 then
-      print(
-        "[lspsaga.nvim] you're running outdated nightly version, you'll need LspNotify autocmd event to enable improved symbol"
-      )
-    end
-    require('lspsaga.symbol'):register_module()
-  end
-
+  require('lspsaga.symbol'):register_module()
   if saga.config.diagnostic.diagnostic_only_current then
     require('lspsaga.diagnostic.virt').diag_on_current()
   end

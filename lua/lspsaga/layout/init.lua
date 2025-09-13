@@ -58,7 +58,7 @@ end
 
 function M:setlines(lines)
   vim.validate({
-    lines = { lines, 't' },
+    lines = { lines, 'table' },
   })
   local bufnr = self.current == LEFT and self.left_bufnr or self.right_bufnr
   api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
@@ -85,7 +85,7 @@ end
 
 function M:done(fn)
   vim.validate({
-    fn = { fn, { 'f' }, true },
+    fn = { fn, { 'function' }, true },
   })
   if fn then
     fn(self.left_bufnr, self.left_winid, self.right_bufnr, self.right_winid)
@@ -96,9 +96,9 @@ end
 function M:close()
   for i, id in ipairs({ self.left_winid, self.right_winid }) do
     if i == 1 and api.nvim_win_is_valid(id) then
-      api.nvim_win_close(id, true)
+      pcall(api.nvim_win_close, id, true)
     elseif i == 2 and self.layout ~= 'dropdown' and api.nvim_win_is_valid(id) then
-      api.nvim_win_close(id, true)
+      pcall(api.nvim_win_close, id, true)
     end
   end
   self.left_winid = nil

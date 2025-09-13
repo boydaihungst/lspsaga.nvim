@@ -1,4 +1,4 @@
-local uv = vim.version().minor >= 10 and vim.uv or vim.loop
+local uv = vim.uv
 local api = vim.api
 local config = require('lspsaga').config
 local win = require('lspsaga.window')
@@ -51,7 +51,7 @@ local function jump_beacon(bufpos, width)
       if vim.wo[winid].winblend == 100 and not timer:is_closing() then
         timer:stop()
         timer:close()
-        api.nvim_win_close(winid, true)
+        pcall(api.nvim_win_close, winid, true)
       end
     end)
   )

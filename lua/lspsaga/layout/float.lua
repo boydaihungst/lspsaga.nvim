@@ -1,7 +1,6 @@
 local api, fn = vim.api, vim.fn
 local win = require('lspsaga.window')
 local ui = require('lspsaga').config.ui
-local is_ten = require('lspsaga.util').is_ten
 local M = {}
 
 function M.left(height, width, bufnr, title)
@@ -51,13 +50,10 @@ function M.right(left_winid, opt)
   opt = opt or {}
   local win_conf = api.nvim_win_get_config(left_winid)
   local original = vim.deepcopy(win_conf)
-  local row = is_ten and win_conf.row or win_conf.row[false]
+  local row = win_conf.row
   local wincol = fn.win_screenpos(win_conf.win)[2]
-  local right_spaces = vim.o.columns
-    - wincol
-    - original.width
-    - (is_ten and original.col or original.col[false])
-  local left_spaces = wincol + (is_ten and original.col or original.col[false])
+  local right_spaces = vim.o.columns - wincol - original.width - original.col
+  local left_spaces = wincol + original.col
   local percent = opt.width or 0.7
 
   local right = math.ceil(right_spaces * percent)
@@ -71,15 +67,15 @@ function M.right(left_winid, opt)
 
   win_conf.width = nil
   if right > 45 then
-    win_conf.col = (is_ten and win_conf.col or win_conf.col[false]) + original.width + 2
+    win_conf.col = win_conf.col + original.width + 2
     win_conf.width = right
     in_right = true
   elseif left > 45 then
     win_conf.width = math.floor(left * percent)
-    win_conf.col = (is_ten and original.col or original.col[false]) - win_conf.width + extra - 1
+    win_conf.col = original.col - win_conf.width + extra - 1
   -- back to right
   elseif right > 20 then
-    win_conf.col = (is_ten and win_conf.col or win_conf.col[false]) + original.width + 2
+    win_conf.col = win_conf.col + original.width + 2
     win_conf.width = right
     in_right = true
   end

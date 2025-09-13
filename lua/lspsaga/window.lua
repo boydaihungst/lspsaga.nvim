@@ -5,12 +5,12 @@ local win = {}
 
 local function make_floating_popup_options(opts)
   vim.validate({
-    opts = { opts, 't', true },
+    opts = { opts, 'table', true },
   })
   opts = opts or {}
   vim.validate({
-    ['opts.offset_x'] = { opts.offset_x, 'n', true },
-    ['opts.offset_y'] = { opts.offset_y, 'n', true },
+    ['opts.offset_x'] = { opts.offset_x, 'number', true },
+    ['opts.offset_y'] = { opts.offset_y, 'number', true },
   })
 
   local anchor = ''
@@ -125,7 +125,7 @@ end
 --float window only
 function obj:winsetconf(config)
   validate({
-    config = { config, 't' },
+    config = { config, 'table' },
   })
   api.nvim_win_set_config(self.winid, config)
   return self
@@ -145,7 +145,7 @@ end
 
 function win:new_float(float_opt, enter, force)
   vim.validate({
-    float_opt = { float_opt, 't', true },
+    float_opt = { float_opt, 'table', true },
   })
   enter = enter or false
 

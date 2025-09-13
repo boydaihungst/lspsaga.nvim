@@ -1,12 +1,10 @@
 local api, lsp, fn = vim.api, vim.lsp, vim.fn
----@diagnostic disable-next-line: deprecated
-local uv = vim.version().minor >= 10 and vim.uv or vim.loop
+local uv = vim.uv
 local ly = require('lspsaga.layout')
 local slist = require('lspsaga.slist')
 local box = require('lspsaga.finder.box')
 local util = require('lspsaga.util')
 local buf_set_lines, buf_set_extmark = api.nvim_buf_set_lines, api.nvim_buf_set_extmark
-local buf_add_highlight = api.nvim_buf_add_highlight
 local config = require('lspsaga').config
 local select_ns = api.nvim_create_namespace('SagaSelect')
 local win = require('lspsaga.window')
@@ -37,7 +35,7 @@ function fd:init_layout()
     self.lbufnr, self.lwinid, _, self.rwinid =
       ly:new(self.layout):dropdown(math.floor(vim.o.lines * config.finder.max_height)):done()
   else
-    self.lbufnr, self.lwinid, _, self.rwinid = ly:new(self.layout)
+    self.lbufnr, self.lwinid, self.rbufnr, self.rwinid = ly:new(self.layout)
       :left(
         math.floor(vim.o.lines * config.finder.max_height),
         math.floor(WIDTH * config.finder.left_width),
@@ -62,6 +60,7 @@ function fd:init_layout()
       return
     end
   end
+
   self:apply_maps()
   self:event()
 end
@@ -87,7 +86,7 @@ function fd:set_highlight(inlevel, line)
     hl_group = 'SagaText'
     col_start = 6
   end
-  buf_add_highlight(self.lbufnr, ns, hl_group, line, col_start, -1)
+  vim.hl.range(self.lbufnr, ns, hl_group, { line, col_start }, { line, -1 })
 end
 
 function fd:method_title(method, row)
@@ -216,7 +215,7 @@ function fd:event()
       api.nvim_buf_clear_namespace(self.lbufnr, select_ns, 0, -1)
       local inlevel = fn.indent(curlnum)
       if inlevel == 6 then
-        buf_add_highlight(self.lbufnr, select_ns, 'String', curlnum - 1, 6, -1)
+        vim.hl.range(self.lbufnr, select_ns, 'String', { curlnum - 1, 6 }, { curlnum - 1, -1 })
       end
       box.indent_current(inlevel)
       local node = slist.find_node(self.list, curlnum)
@@ -267,18 +266,14 @@ function fd:event()
         })
       end)
 
-      buf_add_highlight(
-        node.value.bufnr,
-        ns,
-        'SagaSearch',
+      vim.hl.range(node.value.bufnr, ns, 'SagaSearch', { range.start.line, col }, {
         range.start.line,
-        col,
         lsp.util._get_line_byte_from_position(
           node.value.bufnr,
           range['end'],
           client.offset_encoding
-        )
-      )
+        ),
+      })
       node.value.rendered = true
       util.map_keys(node.value.bufnr, config.finder.keys.close, function()
         self:clean()
@@ -296,8 +291,26 @@ function fd:event()
 
   api.nvim_create_autocmd('QuitPre', {
     buffer = self.lbufnr,
-    callback = function()
+    callback = function(args)
       util.close_win(self.rwinid)
+      api.nvim_del_autocmd(args.id)
+    end,
+  })
+
+  api.nvim_create_autocmd('WinEnter', {
+    callback = function(args)
+      if
+        (
+          vim.api.nvim_get_current_win() ~= self.lwinid
+          and vim.api.nvim_get_current_win() ~= self.rwinid
+        )
+        or (
+          not vim.api.nvim_win_is_valid(self.lwinid) or not vim.api.nvim_win_is_valid(self.rwinid)
+        )
+      then
+        self:clean()
+        pcall(api.nvim_del_autocmd, args.id)
+      end
     end,
   })
 end
@@ -458,7 +471,9 @@ function fd:apply_maps()
       end
 
       if action == 'go_peek' then
-        api.nvim_set_current_win(self.rwinid)
+        if api.nvim_win_is_valid(self.rwinid) then
+          api.nvim_set_current_win(self.rwinid)
+        end
         return
       end
     end)
@@ -512,6 +527,7 @@ function fd:new(args)
 
   self.list = slist.new()
   local params = lsp.util.make_position_params(0, util.get_offset_encoding({ bufnr = curbuf }))
+  ---@cast params lsp.ReferenceParams
   params.context = {
     includeDeclaration = true,
   }
@@ -545,7 +561,9 @@ function fd:new(args)
       self:handler(m, retval[m], spin_close, count == #keys)
     end
     if not self.lwinid then
-      spin_close()
+      if spin_close then
+        spin_close()
+      end
       vim.notify('[Lspsaga] finder no any results to show', vim.log.levels.WARN)
     end
   end))

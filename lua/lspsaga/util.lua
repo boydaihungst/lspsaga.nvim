@@ -1,11 +1,9 @@
 local api, lsp = vim.api, vim.lsp
----@diagnostic disable-next-line: deprecated
-local uv = vim.version().minor >= 10 and vim.uv or vim.loop
+local uv = vim.uv
 local M = {}
 
 M.iswin = uv.os_uname().sysname:match('Windows')
 M.ismac = uv.os_uname().sysname == 'Darwin'
-M.is_ten = vim.version().minor >= 10
 
 M.path_sep = M.iswin and '\\' or '/'
 
@@ -57,20 +55,7 @@ end
 
 -- get client by methods
 function M.get_client_by_method(method)
-  if vim.version().minor >= 10 then
-    return lsp.get_clients({ bufnr = 0, method = method })
-  end
-
-  ---@diagnostic disable-next-line: deprecated
-  local clients = lsp.get_active_clients({ bufnr = 0 })
-  local supports = {}
-
-  for _, client in ipairs(clients or {}) do
-    if client:supports_method(method) then
-      supports[#supports + 1] = client
-    end
-  end
-  return supports
+  return lsp.get_clients({ bufnr = 0, method = method })
 end
 
 function M.feedkeys(key)
@@ -108,27 +93,21 @@ end
 
 function M.get_max_content_length(contents)
   vim.validate({
-    contents = { contents, 't' },
+    contents = { contents, 'table' },
   })
-  local cells = {}
+  local max_len = 0
   for _, v in pairs(contents) do
-    if v:find('\n.') then
-      local tbl = vim.split(v, '\n')
-      vim.tbl_map(function(s)
-        table.insert(cells, #s)
-      end, tbl)
-    else
-      table.insert(cells, #v)
+    for line in vim.gsplit(v, '\n', { plain = true }) do
+      max_len = math.max(max_len, #line)
     end
   end
-  table.sort(cells)
-  return cells[#cells]
+  return max_len
 end
 
 function M.close_win(winid)
   for _, id in ipairs(M.as_table(winid)) do
     if api.nvim_win_is_valid(id) then
-      api.nvim_win_close(id, true)
+      pcall(api.nvim_win_close, id, true)
     end
   end
 end
@@ -172,6 +151,10 @@ end
 ---@param modes string|table<string>|nil
 ---@param opts table|nil
 function M.map_keys(buffer, keys, rhs, modes, opts)
+  if not keys or keys == '' then
+    vim.notify(string.format('[Lspsaga] key map cannot be empty'), vim.log.levels.WARN)
+  end
+
   opts = opts or {}
   opts.nowait = true
   opts.noremap = true
@@ -200,10 +183,6 @@ function M.res_isempty(results)
     end
   end
   return true
-end
-
-function M.nvim_ten()
-  return vim.version().minor >= 10
 end
 
 ---sub c/ cpp header file path when in macos

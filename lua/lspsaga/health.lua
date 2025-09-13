@@ -1,9 +1,9 @@
 local fn, health, api = vim.fn, vim.health, vim.api
 local M = {}
-local err = vim.version().minor >= 10 and health.error or health.report_error
-local warn = vim.version().minor >= 10 and health.warn or health.report_warn
-local ok = vim.version().minor >= 10 and health.ok or health.report_ok
-local start = vim.version().minor >= 10 and health.start or health.report_start
+local err = health.error
+local warn = health.warn
+local ok = health.ok
+local start = health.start
 
 local function treesitter_check()
   if fn.executable('tree-sitter') == 0 then

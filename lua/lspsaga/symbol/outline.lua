@@ -1,11 +1,9 @@
 local ot = {}
 local api, fn = vim.api, vim.fn
----@diagnostic disable-next-line: deprecated
-local uv = vim.version().minor >= 10 and vim.uv or vim.loop
+local uv = vim.uv
 local get_kind_icon = require('lspsaga.lspkind').get_kind_icon
 local config = require('lspsaga').config
 local util = require('lspsaga.util')
-local symbol = require('lspsaga.symbol')
 local win = require('lspsaga.window')
 local buf_set_lines = api.nvim_buf_set_lines
 local buf_set_extmark = api.nvim_buf_set_extmark
@@ -196,8 +194,7 @@ function ot:parse(symbols, curline)
   if config.outline.layout ~= 'float' then
     api.nvim_buf_attach(self.main_buf, false, {
       on_detach = function()
-        local data = vim.version().minor > 10 and require('lspsaga.symbol.head')
-          or require('lspsaga.symbol')
+        local data = require('lspsaga.symbol')
         if vim.tbl_count(data) == 0 and api.nvim_win_is_valid(self.winid) then
           vim.defer_fn(function()
             api.nvim_buf_delete(self.bufnr, { force = true })
@@ -427,8 +424,7 @@ function ot:refresh()
       if args.buf == self.main_buf then
         return
       end
-      local res = not util.nvim_ten() and symbol:get_buf_symbols(args.buf)
-        or require('lspsaga.symbol.head'):get_buf_symbols(args.buf)
+      local res = require('lspsaga.symbol'):get_buf_symbols(args.buf)
 
       if not res or not res.symbols or #res.symbols == 0 then
         return
@@ -449,7 +445,7 @@ function ot:preview()
       local node = slist.find_node(self.list, curlnum)
       if not node then
         if self.preview_winid and api.nvim_win_is_valid(self.preview_winid) then
-          api.nvim_win_close(self.preview_winid, true)
+          pcall(api.nvim_win_close, self.preview_winid, true)
           self.preview_winid = nil
           self.preview_bufnr = nil
         end
@@ -458,6 +454,7 @@ function ot:preview()
       local range = node.value.range or node.value.location.range
       local lines =
         api.nvim_buf_get_lines(self.main_buf, range.start.line, range['end'].line + 1, false)
+
       if not self.preview_winid or not api.nvim_win_is_valid(self.preview_winid) then
         self:create_preview_win(lines)
       else
@@ -470,7 +467,7 @@ function ot:preview()
     buffer = self.bufnr,
     callback = function()
       if self.preview_winid and api.nvim_win_is_valid(self.preview_winid) then
-        api.nvim_win_close(self.preview_winid, true)
+        pcall(api.nvim_win_close, self.preview_winid, true)
         self.preview_winid = nil
         self.preview_bufnr = nil
       end
@@ -581,8 +578,7 @@ function ot:outline(buf)
   self.main_buf = buf or api.nvim_get_current_buf()
   self.callerwinid = api.nvim_get_current_win()
   local curline = api.nvim_win_get_cursor(0)[1]
-  local res = not util.nvim_ten() and symbol:get_buf_symbols(buf)
-    or require('lspsaga.symbol.head'):get_buf_symbols(buf)
+  local res = require('lspsaga.symbol'):get_buf_symbols(buf)
 
   if not res or not res.symbols or #res.symbols == 0 then
     vim.notify(

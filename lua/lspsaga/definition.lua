@@ -4,7 +4,7 @@ local util = require('lspsaga.util')
 local win = require('lspsaga.window')
 local buf_del_keymap = api.nvim_buf_del_keymap
 local beacon = require('lspsaga.beacon').jump_beacon
-local islist = util.is_ten and vim.islist or vim.tbl_islist
+local islist = vim.islist
 local def = {}
 def.__index = def
 
@@ -50,7 +50,7 @@ function def:close_all()
   local function recursive(tbl)
     local node = tbl[#tbl]
     if api.nvim_win_is_valid(node.winid) then
-      api.nvim_win_close(node.winid, true)
+      pcall(api.nvim_win_close, node.winid, true)
     end
     if not node.wipe and not in_def_wins(tbl, node.bufnr) then
       self:delete_maps(node.bufnr)
@@ -158,8 +158,8 @@ function def:create_win(bufnr, root_dir)
   local win_conf = api.nvim_win_get_config(self.list[#self.list].winid)
   win_conf.bufnr = bufnr
   win_conf.title = fname
-  win_conf.row = vim.version().minor >= 10 and win_conf.row or win_conf.row[false] + 1
-  win_conf.col = vim.version().minor >= 10 and win_conf.col or win_conf.col[false] + 1
+  win_conf.row = win_conf.row + 1
+  win_conf.col = win_conf.col + 1
   win_conf.height = win_conf.height - 1
   win_conf.width = win_conf.width - 2
   return win

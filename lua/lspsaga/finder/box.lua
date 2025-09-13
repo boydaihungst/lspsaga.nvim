@@ -1,7 +1,7 @@
 local vfn = vim.fn
 local M = {}
----@diagnostic disable-next-line: deprecated
-local api, uv = vim.api, vim.version().minor >= 10 and vim.uv or vim.loop
+local api, uv = vim.api, vim.uv
+local con_ns = api.nvim_create_namespace('FinderCurrent')
 local win = require('lspsaga.window')
 local config = require('lspsaga').config
 
@@ -68,7 +68,8 @@ function M.filter(method, results)
 end
 
 function M.spinner()
-  local timer = uv.new_timer()
+  local timer = assert(uv.new_timer())
+
   local bufnr, winid = win
     :new_float({
       width = 10,
@@ -102,7 +103,7 @@ function M.spinner()
         return
       end
       api.nvim_buf_set_lines(bufnr, 0, -1, false, { spinner[frame] })
-      api.nvim_buf_add_highlight(bufnr, 0, 'SagaSpinner', 0, 0, -1)
+      vim.hl.range(bufnr, con_ns, 'SagaSpinner', { 0, 0 }, { 0, -1 })
       frame = frame + 1 > #spinner and 1 or frame + 1
     end)
   end)
@@ -111,15 +112,16 @@ function M.spinner()
     if timer:is_active() and not timer:is_closing() then
       timer:stop()
       timer:close()
-      api.nvim_win_close(winid, true)
     end
+    api.nvim_buf_clear_namespace(bufnr, con_ns, 0, -1)
+    pcall(api.nvim_win_close, winid, true)
   end
 end
 
 local function to_normal_bg()
-  local data = api.nvim_get_hl_by_name('SagaNormal', true)
-  if data.background then
-    return { fg = data.background }
+  local data = api.nvim_get_hl(0, { name = 'SagaNormal' })
+  if data.bg then
+    return { fg = data.bg }
   end
   return { link = 'SagaVirtLine' }
 end
@@ -150,7 +152,6 @@ local function indent_range(inlevel)
   return { start and start - 1 or curlnum, _end - 1 }
 end
 
-local con_ns = api.nvim_create_namespace('FinderCurrent')
 function M.indent_current(inlevel)
   local current = inlevel - 2
   local range = indent_range(inlevel)

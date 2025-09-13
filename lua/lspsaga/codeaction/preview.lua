@@ -95,7 +95,7 @@ local function create_preview_win(content, main_winid)
   local opt = {
     relative = win_conf.relative,
     win = win_conf.win,
-    col = util.is_ten and win_conf.col or win_conf.col[false],
+    col = win_conf.col,
     anchor = win_conf.anchor,
     focusable = false,
   }
@@ -109,7 +109,7 @@ local function create_preview_win(content, main_winid)
   local winheight = api.nvim_win_get_height(win_conf.win)
   local margin = config.ui.border == 'none' and 0 or 2
   local north = win_conf.anchor:sub(1, 1) == 'N'
-  local row = util.is_ten and win_conf.row or win_conf.row[false]
+  local row = win_conf.row
 
   -- Calculate available space above (valid_top_height) and below (valid_bot_height)
   local valid_top_height = math.max(0, row - margin)

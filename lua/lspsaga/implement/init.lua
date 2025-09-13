@@ -1,6 +1,5 @@
 local api, fn = vim.api, vim.fn
----@diagnostic disable-next-line: deprecated
-local uv = vim.version().minor >= 10 and vim.uv or vim.loop
+local uv = vim.uv
 local config = require('lspsaga').config.implement
 local ui = require('lspsaga').config.ui
 local ns = api.nvim_create_namespace('SagaImp')

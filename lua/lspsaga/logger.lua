@@ -1,4 +1,4 @@
-local fn, uv = vim.fn, vim.version().minor >= 10 and vim.uv or vim.loop
+local fn, uv = vim.fn, vim.uv
 local util = require('lspsaga.util')
 local log = {}
 
