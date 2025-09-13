@@ -340,7 +340,7 @@ end
 
 function act:close_action_window()
   if self.action_winid and api.nvim_win_is_valid(self.action_winid) then
-    api.nvim_win_close(self.action_winid, true)
+    pcall(api.nvim_win_close, self.action_winid, true)
   end
   preview.preview_win_close()
 end

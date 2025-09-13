@@ -186,7 +186,7 @@ local function action_preview(main_winid, main_buf, tuple)
   local diff = get_action_diff(main_buf, tuple)
   if not diff or #diff == 0 then
     if preview_winid and api.nvim_win_is_valid(preview_winid) then
-      api.nvim_win_close(preview_winid, true)
+      pcall(api.nvim_win_close, preview_winid, true)
       preview_buf = nil
       preview_winid = nil
     end
@@ -213,7 +213,7 @@ end
 
 local function preview_win_close()
   if preview_winid and api.nvim_win_is_valid(preview_winid) then
-    api.nvim_win_close(preview_winid, true)
+    pcall(api.nvim_win_close, preview_winid, true)
     preview_winid = nil
     preview_buf = nil
   end
