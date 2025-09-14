@@ -151,8 +151,11 @@ end
 ---@param modes string|table<string>|nil
 ---@param opts table|nil
 function M.map_keys(buffer, keys, rhs, modes, opts)
-  if not keys or keys == '' then
-    vim.notify(string.format('[Lspsaga] key map cannot be empty'), vim.log.levels.WARN)
+  if not keys or keys == '' or buffer == nil then
+    vim.notify(
+      string.format('[Lspsaga] key map and buffer "%s" cannot be empty', buffer),
+      vim.log.levels.WARN
+    )
   end
 
   opts = opts or {}
