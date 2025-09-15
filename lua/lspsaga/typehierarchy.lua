@@ -72,7 +72,7 @@ function ch:spinner(node)
   end
   local spinner = { '⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷' }
   local frame = 1
-  local timer = uv.new_timer()
+  local timer = assert(uv.new_timer())
 
   local col = node.value.winline == 1 and 0 or node.value.inlevel - 4
   if self.left_bufnr and api.nvim_buf_is_loaded(self.left_bufnr) then
@@ -80,6 +80,9 @@ function ch:spinner(node)
       0,
       50,
       vim.schedule_wrap(function()
+        if not api.nvim_buf_is_valid(self.left_bufnr) then
+          return
+        end
         vim.bo[self.left_bufnr].modifiable = true
         buf_set_extmark(self.left_bufnr, ns, node.value.winline - 1, col, {
           id = node.value.virtid,
@@ -313,20 +316,14 @@ function ch:peek_view()
       if range.start.line >= 0 and range.start.line < total_lines then
         api.nvim_win_set_cursor(self.right_winid, { range.start.line + 1, col })
       end
-      vim.hl.range(
-        curnode.value.bufnr,
-        ns,
-        'SagaSearch',
-        { range.start.line, col },
-        {
-          range.start.line,
-          lsp.util._get_line_byte_from_position(
-            curnode.value.bufnr,
-            range['end'],
-            client.offset_encoding
-          ),
-        }
-      )
+      vim.hl.range(curnode.value.bufnr, ns, 'SagaSearch', { range.start.line, col }, {
+        range.start.line,
+        lsp.util._get_line_byte_from_position(
+          curnode.value.bufnr,
+          range['end'],
+          client.offset_encoding
+        ),
+      })
       util.map_keys(curnode.value.bufnr, config.typehierarchy.keys.shuttle, function()
         window_shuttle(self.left_winid, self.right_winid)
       end)

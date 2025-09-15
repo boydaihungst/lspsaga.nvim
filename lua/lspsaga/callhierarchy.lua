@@ -72,11 +72,7 @@ function ch:spinner(node)
   end
   local spinner = { '⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷' }
   local frame = 1
-  local timer, err = uv.new_timer()
-  if not timer then
-    vim.notify(("[lspsaga] can't display spinner."):format(err), vim.log.levels.WARN)
-    return
-  end
+  local timer = assert(uv.new_timer())
 
   local col = node.value.winline == 1 and 0 or node.value.inlevel - 4
   if self.left_bufnr and api.nvim_buf_is_loaded(self.left_bufnr) then
@@ -84,6 +80,9 @@ function ch:spinner(node)
       0,
       50,
       vim.schedule_wrap(function()
+        if not api.nvim_buf_is_valid(self.left_bufnr) then
+          return
+        end
         vim.bo[self.left_bufnr].modifiable = true
         buf_set_extmark(self.left_bufnr, ns, node.value.winline - 1, col, {
           id = node.value.virtid,

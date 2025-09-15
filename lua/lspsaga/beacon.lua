@@ -35,7 +35,7 @@ local function jump_beacon(bufpos, width)
     :winopt('winhl', 'NormalFloat:SagaBeacon')
     :wininfo()
 
-  local timer = uv.new_timer()
+  local timer = assert(uv.new_timer())
   timer:start(
     0,
     60,

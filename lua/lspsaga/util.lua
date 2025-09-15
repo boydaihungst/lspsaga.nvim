@@ -12,6 +12,9 @@ function M.path_join(...)
 end
 
 function M.path_itera(buf)
+  if not buf or not api.nvim_buf_is_valid(buf) then
+    return {}
+  end
   local parts = vim.split(api.nvim_buf_get_name(buf), M.path_sep, { trimempty = true })
   local index = #parts + 1
   return function()
