@@ -270,14 +270,18 @@ function sd:toggle_or_jump(entrys_list)
     if not info then
       return
     end
-    pcall(api.nvim_win_close, self.winid, true)
+    if api.nvim_win_is_valid(self.winid) then
+      pcall(api.nvim_win_close, self.winid, true)
+    end
     local ln, col, bn = unpack(vim.split(info, ':'))
     local nbn = tonumber(bn)
     if not nbn then
       return
     end
+
     local wins = fn.win_findbuf(nbn)
     if #wins == 0 then
+      vim.bo[tonumber(bn)].buflisted = true
       ---@diagnostic disable-next-line: param-type-mismatch
       api.nvim_win_set_buf(0, tonumber(bn))
       wins[#wins] = 0
