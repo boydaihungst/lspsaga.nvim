@@ -19,11 +19,20 @@ local function clean_ctx()
   end
 end
 
-local function clean_msg(msg)
-  if msg:find('%(.+%)%S$') then
-    return msg:gsub('%(.+%)%S$', '')
+local function concealed_markdown_len(str)
+  local count = 0
+
+  -- Inline code: `code`
+  for _ in str:gmatch('`.-`') do
+    count = count + 2
   end
-  return msg
+
+  -- Fenced code blocks: ```code```
+  for _ in str:gmatch('```.-```') do
+    count = count + 6
+  end
+
+  return count
 end
 
 function act:action_callback(tuples, enriched_ctx)
@@ -34,24 +43,48 @@ function act:action_callback(tuples, enriched_ctx)
 
   local content = {}
 
+  local align = util.align
+  local section_padding = '  '
+  local max_index, name_max_len, group_max_len = util.num_len(#tuples), 0, 0
+  for _, client_with_actions in ipairs(tuples) do
+    if client_with_actions[2].name then
+      local name_len = api.nvim_strwidth(client_with_actions[2].name .. section_padding)
+      name_max_len = math.max(name_len, name_max_len)
+    elseif client_with_actions[2].title then
+      local title_len = api.nvim_strwidth(client_with_actions[2].title .. section_padding)
+      name_max_len = math.max(title_len, name_max_len)
+    end
+    if client_with_actions[2].group then
+      local group_len =
+        api.nvim_strwidth((client_with_actions[2].group .. section_padding) or section_padding)
+      group_max_len = math.max(group_len, group_max_len)
+    end
+  end
   for index, client_with_actions in ipairs(tuples) do
     local action_title = ''
     if #client_with_actions ~= 2 then
       vim.notify('[lspsaga] failed indexing client actions')
       return
     end
-    if client_with_actions[2].title then
-      action_title = '**' .. index .. '** ' .. clean_msg(client_with_actions[2].title)
+
+    if client_with_actions[2].name or client_with_actions[2].title then
+      action_title = align(' **' .. tostring(index) .. '**' .. section_padding, max_index + 6) -- 6 is ` **` + `** ` length
+        .. align(
+          (client_with_actions[2].name or client_with_actions[2].title or '') .. section_padding,
+          name_max_len
+            + concealed_markdown_len(
+              (client_with_actions[2].name or client_with_actions[2].title or '')
+            )
+        )
+        .. align((client_with_actions[2].group or '') .. ' ', group_max_len)
     end
     if config.code_action.show_server_name == true then
-      if type(client_with_actions[1]) == 'string' then
-        action_title = action_title .. '  (' .. client_with_actions[1] .. ')'
-      else
-        action_title = action_title
-          .. '  ('
-          .. lsp.get_client_by_id(client_with_actions[1]).name
-          .. ')'
-      end
+      action_title = action_title
+        .. '('
+        .. (type(client_with_actions[1]) == 'string' and client_with_actions[1] or lsp.get_client_by_id(
+          client_with_actions[1]
+        ).name)
+        .. ')'
     end
     content[#content + 1] = action_title
   end
