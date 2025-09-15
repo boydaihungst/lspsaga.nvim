@@ -134,7 +134,7 @@
 
 ---@class LspsagaConfig.Beacon
 ---@field enable? boolean Enable beacon
----@field frequency? integer
+---@field frequency? integer higher number means highlight time after jump is shorter. Value from 0 to 10
 
 ---@class LspsagaConfig.Scroll.Keys
 ---@field scroll_down? SagaKeys
