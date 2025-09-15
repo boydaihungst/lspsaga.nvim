@@ -188,6 +188,9 @@ function sd:layout_float(opt)
     :wininfo()
 
   api.nvim_win_set_cursor(self.winid, { 2, 3 })
+  if type(diag_conf.keys.quit_in_show) == string then
+    diag_conf.keys.quit_in_show = { diag_conf.keys.quit_in_show }
+  end
   for _, key in ipairs(diag_conf.keys.quit_in_show) do
     util.map_keys(self.bufnr, key, function()
       local curwin = api.nvim_get_current_win()

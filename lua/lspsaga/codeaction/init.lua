@@ -20,7 +20,7 @@ local function clean_ctx()
 end
 
 ---@param str string
-local function concealed_markdown_len(str)
+function act:concealed_markdown_len(str)
   local count = 0
   -- Link text: [text](url)
   for text, url in str:gmatch('%[([^%]]-)%]%((.-)%)') do
@@ -59,7 +59,7 @@ end
 
 --- Get lsp server priority
 ---@param client string|number
-local function get_lsp_priority(client)
+function act:get_lsp_priority(client)
   local priorities = config.code_action.server_priority
   if not client then
     return priorities.default or 1000
@@ -82,8 +82,8 @@ function act:action_callback(tuples, enriched_ctx)
 
   -- sort by server priority from high to low
   table.sort(tuples, function(a, b)
-    local prio_a = get_lsp_priority(a[1])
-    local prio_b = get_lsp_priority(b[1])
+    local prio_a = self:get_lsp_priority(a[1])
+    local prio_b = self:get_lsp_priority(b[1])
     if prio_a == prio_b then
       return a[3] < b[3] -- preserve action order if the same client
     end
@@ -121,7 +121,7 @@ function act:action_callback(tuples, enriched_ctx)
         .. align(
           (client_with_actions[2].name or client_with_actions[2].title or '') .. section_padding,
           name_max_len
-            + concealed_markdown_len(
+            + act:concealed_markdown_len(
               (client_with_actions[2].name or client_with_actions[2].title or '')
             )
         )

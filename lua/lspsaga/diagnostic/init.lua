@@ -76,15 +76,59 @@ end
 
 function diag:code_action_cb(action_tuples, enriched_ctx, win_conf)
   local contents = {}
-  for index, client_with_actions in pairs(action_tuples) do
-    if #client_with_actions ~= 2 then
+  -- sort by server priority from high to low
+  table.sort(action_tuples, function(a, b)
+    local prio_a = act:get_lsp_priority(a[1])
+    local prio_b = act:get_lsp_priority(b[1])
+    if prio_a == prio_b then
+      return a[3] < b[3] -- preserve action order if the same client
+    end
+    return prio_a > prio_b
+  end)
+
+  local align = util.align
+  local section_padding = '  '
+  local max_index, name_max_len, group_max_len = util.num_len(#action_tuples), 0, 0
+  for _, client_with_actions in ipairs(action_tuples) do
+    if client_with_actions[2].name then
+      local name_len = api.nvim_strwidth(client_with_actions[2].name .. section_padding)
+      name_max_len = math.max(name_len, name_max_len)
+    elseif client_with_actions[2].title then
+      local title_len = api.nvim_strwidth(client_with_actions[2].title .. section_padding)
+      name_max_len = math.max(title_len, name_max_len)
+    end
+    if client_with_actions[2].group then
+      local group_len =
+        api.nvim_strwidth((client_with_actions[2].group .. section_padding) or section_padding)
+      group_max_len = math.max(group_len, group_max_len)
+    end
+  end
+  for index, client_with_actions in ipairs(action_tuples) do
+    local action_title = ''
+    if #client_with_actions < 2 then
       vim.notify('[lspsaga] failed indexing client actions')
       return
     end
-    if client_with_actions[2].title then
-      local action_title = '**' .. index .. '** ' .. client_with_actions[2].title
-      contents[#contents + 1] = action_title
+
+    if client_with_actions[2].name or client_with_actions[2].title then
+      action_title = align(' **' .. tostring(index) .. '**' .. section_padding, max_index + 7) -- 7 is ` **` + `**` + section_padding
+        .. align(
+          (client_with_actions[2].name or client_with_actions[2].title or '') .. section_padding,
+          name_max_len
+            + act:concealed_markdown_len(
+              (client_with_actions[2].name or client_with_actions[2].title or '')
+            )
+        )
+        .. align((client_with_actions[2].group or '') .. ' ', group_max_len)
     end
+    if config.code_action.show_server_name == true then
+      action_title = action_title
+        .. (
+          type(client_with_actions[1]) == 'string' and client_with_actions[1]
+          or lsp.get_client_by_id(client_with_actions[1]).name
+        )
+    end
+    contents[#contents + 1] = action_title
   end
   local max_content_len = util.get_max_content_length(contents)
   local orig_win_width = api.nvim_win_get_width(win_conf.win)
@@ -116,6 +160,7 @@ function diag:code_action_cb(action_tuples, enriched_ctx, win_conf)
     self.number_count = #action_tuples
   end
   if diag_conf.auto_preview then
+    -- api.nvim_set_current_win(self.float_winid)
     api.nvim_win_set_cursor(self.float_winid, { start_line + 1, 0 })
     vim.hl.range(self.float_bufnr, ns, 'SagaSelect', { start_line, 6 }, { start_line, -1 })
     action_preview(self.float_winid, curbuf, action_tuples[1])
@@ -161,6 +206,15 @@ function diag:code_action_cb(action_tuples, enriched_ctx, win_conf)
 
   util.map_keys(self.float_bufnr, diag_conf.keys.exec_action, function()
     self:do_code_action(action_tuples, enriched_ctx)
+  end)
+
+  util.map_keys(self.main_buf, diag_conf.keys.focus_code_action, function()
+    if api.nvim_win_is_valid(self.float_winid) then
+      api.nvim_set_current_win(self.float_winid)
+      api.nvim_win_set_cursor(self.float_winid, { start_line + 1, 0 })
+      vim.hl.range(self.float_bufnr, ns, 'SagaSelect', { start_line, 6 }, { start_line, -1 })
+      action_preview(self.float_winid, curbuf, action_tuples[1])
+    end
   end)
 
   util.map_keys(self.main_buf, config.scroll_preview.scroll_down, function()
@@ -212,6 +266,7 @@ function diag:do_code_action(action_tuples, enriched_ctx)
   if action_tuples[num] then
     local action = action_tuples[num][2]
     local client = lsp.get_client_by_id(action_tuples[num][1])
+    util.close_win(self.float_winid) -- Some action need to focus the main window
     act:do_code_action(action, client, enriched_ctx)
   end
   self:clean_data()
@@ -256,10 +311,8 @@ function diag:goto_pos(pos, opts)
   if not entry then
     return
   end
-  (is_forward and vim.diagnostic.jump({ count = 1, float = true }) or vim.diagnostic.jump({
-    count = -1,
-    float = true,
-  }))(vim.tbl_extend('keep', {
+  vim.diagnostic.jump(vim.tbl_extend('keep', {
+    diagnostic = entry,
     float = {
       border = config.ui.border,
       format = function(diagnostic)
@@ -273,6 +326,7 @@ function diag:goto_pos(pos, opts)
       prefix = { '• ', 'Title' },
     },
   }, opts or {}))
+
   util.valid_markdown_parser()
   require('lspsaga.beacon').jump_beacon({ entry.lnum, entry.col }, #api.nvim_get_current_line())
   vim.schedule(function()
@@ -280,7 +334,7 @@ function diag:goto_pos(pos, opts)
       return
     end
     vim.bo[self.float_bufnr].filetype = 'markdown'
-    vim.wo[self.float_winid].conceallevel = 2
+    vim.wo[self.float_winid].conceallevel = 3
     vim.wo[self.float_winid].cocu = 'niv'
     vim.bo[self.float_bufnr].bufhidden = 'wipe'
     api.nvim_create_autocmd('WinClosed', {

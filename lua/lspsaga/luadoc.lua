@@ -91,7 +91,7 @@
 ---@field show_layout? LayoutOption Config layout of diagnostic window not jump window
 ---@field show_normal_height? integer Show window height when diagnostic show window layout is normal
 ---@field jump_num_shortcut? boolean Enable number shortcuts to execute code action quickly
----@field auto_preview? boolean Auto preview result after change
+---@field auto_preview? boolean Auto select the first code action and show preview result window (if available)
 ---@field max_width? number Diagnostic jump window max width
 ---@field max_height? number Diagnostic jump window max height
 ---@field max_show_width? number Show window max width when layout is float
@@ -145,6 +145,7 @@
 ---@field quit? SagaKeys quit key for the jump window
 ---@field toggle_or_jump? SagaKeys toggle or jump to position when in `diagnostic_show` window
 ---@field quit_in_show? SagaKeys quit key for the `diagnostic_show` window
+---@field focus_code_action? SagaKeys focus code action window
 
 ---@class LspsagaConfig.CodeAction.Keys
 ---@field quit? SagaKeys quit the float window
