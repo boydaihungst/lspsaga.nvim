@@ -54,6 +54,10 @@ local default_config = {
       quit = 'q',
       exec = '<CR>',
     },
+    server_priority = {
+      default = 1000,
+      gitsigns = 500,
+    },
   },
   lightbulb = {
     enable = true,

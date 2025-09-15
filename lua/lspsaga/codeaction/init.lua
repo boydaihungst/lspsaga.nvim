@@ -57,11 +57,38 @@ local function concealed_markdown_len(str)
   return count
 end
 
+--- Get lsp server priority
+---@param client string|number
+local function get_lsp_priority(client)
+  local priorities = config.code_action.server_priority
+  if not client then
+    return priorities.default or 1000
+  end
+  if type(client) == 'number' then
+    local _c = lsp.get_client_by_id(client)
+    if not _c then
+      return priorities.default or 1000
+    end
+    client = _c.name
+  end
+  return priorities[client] or priorities.default or 1000
+end
+
 function act:action_callback(tuples, enriched_ctx)
   if #tuples == 0 then
     vim.notify('No code actions available', vim.log.levels.INFO)
     return
   end
+
+  -- sort by server priority from high to low
+  table.sort(tuples, function(a, b)
+    local prio_a = get_lsp_priority(a[1])
+    local prio_b = get_lsp_priority(b[1])
+    if prio_a == prio_b then
+      return a[3] < b[3] -- preserve action order if the same client
+    end
+    return prio_a > prio_b
+  end)
 
   local content = {}
 
@@ -84,7 +111,7 @@ function act:action_callback(tuples, enriched_ctx)
   end
   for index, client_with_actions in ipairs(tuples) do
     local action_title = ''
-    if #client_with_actions ~= 2 then
+    if #client_with_actions < 2 then
       vim.notify('[lspsaga] failed indexing client actions')
       return
     end
@@ -245,9 +272,11 @@ function act:send_request(main_buf, options, callback)
     self.pending_request = false
     local action_tuples = {}
 
+    local origin_order = 0
     for client_id, item in pairs(results) do
       for _, action in ipairs(item.result or {}) do
-        action_tuples[#action_tuples + 1] = { client_id, action }
+        origin_order = origin_order + 1
+        action_tuples[#action_tuples + 1] = { client_id, action, origin_order }
       end
     end
 
@@ -255,7 +284,8 @@ function act:send_request(main_buf, options, callback)
       local res = self:extend_gitsign(params)
       if res then
         for _, action in ipairs(res) do
-          action_tuples[#action_tuples + 1] = { 'gitsigns', action }
+          origin_order = origin_order + 1
+          action_tuples[#action_tuples + 1] = { 'gitsigns', action, origin_order }
         end
       end
     end
