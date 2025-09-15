@@ -301,4 +301,9 @@ function M.num_len(n)
   end
   return math.floor(math.log10(n)) + 1
 end
+
+function M.to_litteral_string(str)
+  return str and str:gsub('([%^%$%(%)%%%.%[%]%*%+%-%?])', '%%%1')
+end
+
 return M

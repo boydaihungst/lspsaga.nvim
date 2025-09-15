@@ -25,34 +25,34 @@ local function concealed_markdown_len(str)
   -- Link text: [text](url)
   for text, url in str:gmatch('%[([^%]]-)%]%((.-)%)') do
     count = count + 4 + api.nvim_strwidth(url)
-    local escaped_text = text:gsub('([%^%$%(%)%%%.%[%]%*%+%-%?])', '%%%1')
-    local escaped_url = url:gsub('([%^%$%(%)%%%.%[%]%*%+%-%?])', '%%%1')
+    local escaped_text = util.to_litteral_string(text)
+    local escaped_url = util.to_litteral_string(url)
     str = str:gsub('%[' .. escaped_text .. '%]%(' .. escaped_url .. '%)', '')
   end
   -- Bold text: **text**
   for matched in str:gmatch('%*%*.-%*%*') do
     count = count + 4
-    str = str:gsub('%*%*' .. matched .. '%*%*', '')
+    str = str:gsub('%*%*' .. util.to_litteral_string(matched) .. '%*%*', '')
   end
   -- Italic text: *text*
   for matched in str:gmatch('%*.-%*') do
     count = count + 2
-    str = str:gsub('%*' .. matched .. '%*', '')
+    str = str:gsub('%*' .. util.to_litteral_string(matched) .. '%*', '')
   end
   -- Strikethrough text: ~~text~~
   for matched in str:gmatch('~~.-~~') do
     count = count + 4
-    str = str:gsub('~~' .. matched .. '~~', '')
+    str = str:gsub('~~' .. util.to_litteral_string(matched) .. '~~', '')
   end
   -- Fenced code inline: `code`
   for matched in str:gmatch('`.-`') do
     count = count + 2
-    str = str:gsub('`' .. matched .. '`', '')
+    str = str:gsub('`' .. util.to_litteral_string(matched) .. '`', '')
   end
   -- Fenced code blocks: ```code```
   for matched in str:gmatch('```.-```') do
     count = count + 6
-    str = str:gsub('```' .. matched .. '```', '')
+    str = str:gsub('```' .. util.to_litteral_string(matched) .. '```', '')
   end
   return count
 end
@@ -141,7 +141,7 @@ function act:action_callback(tuples, enriched_ctx)
       ['filetype'] = 'markdown',
     })
     :winopt({
-      ['conceallevel'] = 2,
+      ['conceallevel'] = 3,
       ['concealcursor'] = 'niv',
     })
     :winhl('SagaNormal', 'SagaBorder')
