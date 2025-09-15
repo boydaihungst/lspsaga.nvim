@@ -19,19 +19,41 @@ local function clean_ctx()
   end
 end
 
+---@param str string
 local function concealed_markdown_len(str)
   local count = 0
-
-  -- Inline code: `code`
-  for _ in str:gmatch('`.-`') do
+  -- Link text: [text](url)
+  for text, url in str:gmatch('%[([^%]]-)%]%((.-)%)') do
+    count = count + 4 + api.nvim_strwidth(url)
+    local escaped_text = text:gsub('([%^%$%(%)%%%.%[%]%*%+%-%?])', '%%%1')
+    local escaped_url = url:gsub('([%^%$%(%)%%%.%[%]%*%+%-%?])', '%%%1')
+    str = str:gsub('%[' .. escaped_text .. '%]%(' .. escaped_url .. '%)', '')
+  end
+  -- Bold text: **text**
+  for matched in str:gmatch('%*%*.-%*%*') do
+    count = count + 4
+    str = str:gsub('%*%*' .. matched .. '%*%*', '')
+  end
+  -- Italic text: *text*
+  for matched in str:gmatch('%*.-%*') do
     count = count + 2
+    str = str:gsub('%*' .. matched .. '%*', '')
   end
-
+  -- Strikethrough text: ~~text~~
+  for matched in str:gmatch('~~.-~~') do
+    count = count + 4
+    str = str:gsub('~~' .. matched .. '~~', '')
+  end
+  -- Fenced code inline: `code`
+  for matched in str:gmatch('`.-`') do
+    count = count + 2
+    str = str:gsub('`' .. matched .. '`', '')
+  end
   -- Fenced code blocks: ```code```
-  for _ in str:gmatch('```.-```') do
+  for matched in str:gmatch('```.-```') do
     count = count + 6
+    str = str:gsub('```' .. matched .. '```', '')
   end
-
   return count
 end
 
