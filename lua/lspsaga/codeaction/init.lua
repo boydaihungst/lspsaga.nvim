@@ -68,7 +68,7 @@ function act:action_callback(tuples, enriched_ctx)
     end
 
     if client_with_actions[2].name or client_with_actions[2].title then
-      action_title = align(' **' .. tostring(index) .. '**' .. section_padding, max_index + 6) -- 6 is ` **` + `** ` length
+      action_title = align(' **' .. tostring(index) .. '**' .. section_padding, max_index + 7) -- 7 is ` **` + `**` + section_padding
         .. align(
           (client_with_actions[2].name or client_with_actions[2].title or '') .. section_padding,
           name_max_len
@@ -80,11 +80,10 @@ function act:action_callback(tuples, enriched_ctx)
     end
     if config.code_action.show_server_name == true then
       action_title = action_title
-        .. '('
-        .. (type(client_with_actions[1]) == 'string' and client_with_actions[1] or lsp.get_client_by_id(
-          client_with_actions[1]
-        ).name)
-        .. ')'
+        .. (
+          type(client_with_actions[1]) == 'string' and client_with_actions[1]
+          or lsp.get_client_by_id(client_with_actions[1]).name
+        )
     end
     content[#content + 1] = action_title
   end
