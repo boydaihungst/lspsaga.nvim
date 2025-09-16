@@ -166,13 +166,16 @@ local function lb_autocmd()
         return
       end
       local group = api.nvim_create_augroup(group_name, { clear = true })
-      api.nvim_create_autocmd('CursorMoved', {
-        group = group,
-        buffer = buf,
-        callback = function(args)
-          update(args.buf)
-        end,
-      })
+      api.nvim_create_autocmd(
+        { 'CursorMoved', config.lightbulb.enable_in_insert and 'CursorMovedI' or nil },
+        {
+          group = group,
+          buffer = buf,
+          callback = function(args)
+            update(args.buf)
+          end,
+        }
+      )
 
       if not config.lightbulb.enable_in_insert then
         api.nvim_create_autocmd('InsertEnter', {
