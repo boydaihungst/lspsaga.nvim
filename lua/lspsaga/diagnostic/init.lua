@@ -296,6 +296,7 @@ function diag:valid_win_buf()
     self.float_bufnr
     and self.float_winid
     and api.nvim_win_is_valid(self.float_winid)
+    and self.float_bufnr
     and api.nvim_buf_is_valid(self.float_bufnr)
   then
     return true

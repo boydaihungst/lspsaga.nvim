@@ -132,7 +132,7 @@ local function update(buf)
   timer:start(config.lightbulb.debounce, 0, function()
     timer:stop()
     vim.schedule(function()
-      if api.nvim_buf_is_valid(buf) and api.nvim_get_current_buf() == buf then
+      if buf and api.nvim_buf_is_valid(buf) and api.nvim_get_current_buf() == buf then
         render(buf)
       end
     end)

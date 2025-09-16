@@ -68,7 +68,7 @@ end
 
 function M.scroll_in_float(bufnr, winid)
   local config = require('lspsaga').config
-  if not api.nvim_win_is_valid(winid) or not api.nvim_buf_is_valid(bufnr) then
+  if not api.nvim_win_is_valid(winid) or not bufnr or  not api.nvim_buf_is_valid(bufnr) then
     return
   end
 

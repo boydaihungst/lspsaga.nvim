@@ -80,7 +80,7 @@ function ch:spinner(node)
       0,
       50,
       vim.schedule_wrap(function()
-        if not api.nvim_buf_is_valid(self.left_bufnr) then
+        if not self.left_bufnr or not api.nvim_buf_is_valid(self.left_bufnr) then
           return
         end
         vim.bo[self.left_bufnr].modifiable = true

@@ -52,7 +52,7 @@ function symbol:buf_watcher(bufnr, group)
         timer_clear(bufstate[args.buf])
         bufstate[args.buf] = nil
         vim.schedule(function()
-          if not api.nvim_buf_is_valid(args.buf) then
+          if not args.buf or not api.nvim_buf_is_valid(args.buf) then
             return
           end
           self:do_request(args.buf, args.data.client_id)

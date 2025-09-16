@@ -99,7 +99,7 @@ function M.spinner()
 
   timer:start(0, 50, function()
     vim.schedule(function()
-      if not api.nvim_buf_is_valid(bufnr) then
+      if not bufnr or not api.nvim_buf_is_valid(bufnr) then
         return
       end
       api.nvim_buf_set_lines(bufnr, 0, -1, false, { spinner[frame] })

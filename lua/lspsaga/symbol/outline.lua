@@ -412,7 +412,7 @@ function ot:refresh()
       end
       api.nvim_set_option_value('modifiable', true, { buf = self.bufnr })
       vim.schedule(function()
-        if not api.nvim_buf_is_valid(args.data.bufnr) then
+        if not args.data.bufnr or not api.nvim_buf_is_valid(args.data.bufnr) then
           return
         end
         self:parse(args.data.symbols)

@@ -8,7 +8,9 @@ local islist = vim.islist
 local hover = {}
 
 function hover:clean()
-  api.nvim_buf_clear_namespace(self.bufnr, ns, 0, -1)
+  if self.bufnr and api.nvim_buf_is_valid(self.bufnr) then
+    api.nvim_buf_clear_namespace(self.bufnr, ns, 0, -1)
+  end
   if self.cancel then
     self.cancel()
     self.cancel = nil
