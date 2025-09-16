@@ -209,7 +209,7 @@ function diag:code_action_cb(action_tuples, enriched_ctx, win_conf)
   end)
 
   util.map_keys(self.main_buf, diag_conf.keys.focus_code_action, function()
-    if api.nvim_win_is_valid(self.float_winid) then
+    if self.float_winid and api.nvim_win_is_valid(self.float_winid) then
       api.nvim_set_current_win(self.float_winid)
       api.nvim_win_set_cursor(self.float_winid, { start_line + 1, 0 })
       vim.hl.range(self.float_bufnr, ns, 'SagaSelect', { start_line, 6 }, { start_line, -1 })

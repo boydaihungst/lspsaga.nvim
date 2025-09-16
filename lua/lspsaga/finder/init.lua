@@ -471,7 +471,7 @@ function fd:apply_maps()
       end
 
       if action == 'go_peek' then
-        if api.nvim_win_is_valid(self.rwinid) then
+        if self.rwinid and api.nvim_win_is_valid(self.rwinid) then
           api.nvim_set_current_win(self.rwinid)
         end
         return

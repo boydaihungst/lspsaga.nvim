@@ -68,13 +68,18 @@ end
 
 function M.scroll_in_float(bufnr, winid)
   local config = require('lspsaga').config
-  if not api.nvim_win_is_valid(winid) or not bufnr or  not api.nvim_buf_is_valid(bufnr) then
+  if
+    not winid
+    or not api.nvim_win_is_valid(winid)
+    or not bufnr
+    or not api.nvim_buf_is_valid(bufnr)
+  then
     return
   end
 
   for i, map in ipairs({ config.scroll_preview.scroll_down, config.scroll_preview.scroll_up }) do
     M.map_keys(bufnr, map, function()
-      if api.nvim_win_is_valid(winid) then
+      if winid and api.nvim_win_is_valid(winid) then
         api.nvim_win_call(winid, function()
           local key = i == 1 and '<C-d>' or '<C-u>'
           M.feedkeys(key)
@@ -109,7 +114,7 @@ end
 
 function M.close_win(winid)
   for _, id in ipairs(M.as_table(winid)) do
-    if api.nvim_win_is_valid(id) then
+    if id and api.nvim_win_is_valid(id) then
       pcall(api.nvim_win_close, id, true)
     end
   end

@@ -197,7 +197,7 @@ function sd:layout_float(opt)
       if curwin ~= self.winid then
         return
       end
-      if api.nvim_win_is_valid(curwin) then
+      if curwin and api.nvim_win_is_valid(curwin) then
         pcall(api.nvim_win_close, curwin, true)
         clean_ctx()
       end
@@ -270,7 +270,7 @@ function sd:toggle_or_jump(entrys_list)
     if not info then
       return
     end
-    if api.nvim_win_is_valid(self.winid) then
+    if self.winid and api.nvim_win_is_valid(self.winid) then
       pcall(api.nvim_win_close, self.winid, true)
     end
     local ln, col, bn = unpack(vim.split(info, ':'))

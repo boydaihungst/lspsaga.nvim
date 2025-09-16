@@ -15,7 +15,7 @@ describe('layout module', function()
 
   after_each(function()
     for _, id in ipairs({ lwinid, rwinid }) do
-      if vim.api.nvim_win_is_valid(id) then
+      if id and vim.api.nvim_win_is_valid(id) then
         vim.api.nvim_win_close(id, true)
       end
     end

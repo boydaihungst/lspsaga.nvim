@@ -49,7 +49,7 @@ function def:close_all()
   vim.opt.eventignore:append('WinClosed')
   local function recursive(tbl)
     local node = tbl[#tbl]
-    if api.nvim_win_is_valid(node.winid) then
+    if node.winid and api.nvim_win_is_valid(node.winid) then
       pcall(api.nvim_win_close, node.winid, true)
     end
     if not node.wipe and not in_def_wins(tbl, node.bufnr) then

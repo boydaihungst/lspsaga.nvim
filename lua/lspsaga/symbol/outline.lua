@@ -195,7 +195,7 @@ function ot:parse(symbols, curline)
     api.nvim_buf_attach(self.main_buf, false, {
       on_detach = function()
         local data = require('lspsaga.symbol')
-        if vim.tbl_count(data) == 0 and api.nvim_win_is_valid(self.winid) then
+        if vim.tbl_count(data) == 0 and self.winid and api.nvim_win_is_valid(self.winid) then
           vim.defer_fn(function()
             api.nvim_buf_delete(self.bufnr, { force = true })
             pcall(api.nvim_win_close, self.winid, true)

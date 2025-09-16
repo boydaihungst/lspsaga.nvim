@@ -40,7 +40,7 @@ local function jump_beacon(bufpos, width)
     0,
     60,
     vim.schedule_wrap(function()
-      if not api.nvim_win_is_valid(winid) then
+      if not winid or not api.nvim_win_is_valid(winid) then
         return
       end
       local blend = vim.wo[winid].winblend + config.beacon.frequency
