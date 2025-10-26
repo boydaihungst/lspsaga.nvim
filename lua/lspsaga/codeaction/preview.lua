@@ -49,7 +49,9 @@ local function get_action_diff(main_buf, tuple)
   local srow = 0
   local erow = 0
   for _, changes in pairs(all_changes) do
-    lsp.util.apply_text_edits(changes, tmp_buf, client.offset_encoding)
+    if client then
+      lsp.util.apply_text_edits(changes, tmp_buf, client.offset_encoding)
+    end
     vim.tbl_map(function(item)
       srow = srow == 0 and item.range.start.line or srow
       erow = erow == 0 and item.range['end'].line or erow
@@ -69,7 +71,7 @@ local function get_action_diff(main_buf, tuple)
 
   api.nvim_buf_delete(tmp_buf, { force = true })
   ---@diagnostic disable-next-line: missing-fields
-  local diff = vim.diff(table.concat(lines), table.concat(data), {
+  local diff = vim.text.diff(table.concat(lines), table.concat(data), {
     algorithm = 'minimal',
     ctxlen = 0,
   })
