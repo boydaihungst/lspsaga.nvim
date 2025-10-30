@@ -28,6 +28,8 @@ end
 
 local ns = api.nvim_create_namespace('SagaFinder')
 
+fd.last_cursor_lnum = 0
+
 function fd:init_layout()
   self.callerwinid = api.nvim_get_current_win()
   local WIDTH = api.nvim_win_get_width(self.callerwinid)
@@ -208,17 +210,41 @@ function fd:event()
   api.nvim_create_autocmd('CursorMoved', {
     buffer = self.lbufnr,
     callback = function()
+      ::recalculate_node::
       if not self.lwinid or not api.nvim_win_is_valid(self.lwinid) then
         return
       end
-      local curlnum = api.nvim_win_get_cursor(self.lwinid)[1]
+      local curpos = api.nvim_win_get_cursor(self.lwinid)
+      local curlnum = curpos[1]
+      local curcol = curpos[2]
+      local last_lnum = fd.last_cursor_lnum or 0
+      fd.last_cursor_lnum = curlnum
+      local cursordirection = last_lnum >= curlnum and -1 or 1
       api.nvim_buf_clear_namespace(self.lbufnr, select_ns, 0, -1)
       local inlevel = fn.indent(curlnum)
       if inlevel == 6 then
         vim.hl.range(self.lbufnr, select_ns, 'String', { curlnum - 1, 6 }, { curlnum - 1, -1 })
       end
       box.indent_current(inlevel)
-      local node = slist.find_node(self.list, curlnum)
+      local node
+      local _curlnum = curlnum
+      while true do
+        node = slist.find_node(self.list, _curlnum)
+        if node and node.value.bufnr then
+          if _curlnum ~= curlnum then
+            api.nvim_win_set_cursor(self.lwinid, { _curlnum, curcol })
+            goto recalculate_node
+          end
+          break
+        end
+        if cursordirection == 1 and not self.list.next then
+          break
+        end
+        _curlnum = _curlnum + cursordirection
+        if _curlnum < 0 then
+          break
+        end
+      end
       if not node or not node.value.bufnr then
         return
       end
