@@ -111,9 +111,16 @@ local function render(bufnr)
     diagnostics = diagnostic_vim_to_lsp(vim.diagnostic.get(bufnr, { lnum = row })),
   }
 
-  lsp.buf_request(bufnr, 'textDocument/codeAction', params, function(_, result, _)
+  lsp.buf_request(bufnr, 'textDocument/codeAction', params, function(_, result, ctx)
     if api.nvim_get_current_buf() ~= bufnr then
       return
+    end
+
+    if ctx and ctx.client_id then
+      local client = lsp.get_client_by_id(ctx.client_id)
+      if client and vim.tbl_contains(config.lightbulb.ignore.clients, client.name) then
+        return
+      end
     end
 
     if result and #result > 0 then
