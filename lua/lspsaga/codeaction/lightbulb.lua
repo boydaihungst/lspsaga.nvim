@@ -107,6 +107,7 @@ end
 local function render(bufnr)
   local row = api.nvim_win_get_cursor(0)[1] - 1
   local params = lsp.util.make_range_params(0, util.get_offset_encoding({ bufnr = bufnr }))
+  ---@cast params lsp.CodeActionParams
   params.context = {
     diagnostics = diagnostic_vim_to_lsp(vim.diagnostic.get(bufnr, { lnum = row })),
   }
