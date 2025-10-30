@@ -393,6 +393,11 @@ function sd:show(opt)
   end)
   util.map_keys(self.bufnr, diag_conf.keys.send_to_quickfix, function()
     diag:send_quickfix(opt.entrys_list)
+    if self.winid and api.nvim_win_is_valid(self.winid) then
+      pcall(api.nvim_win_close, self.winid, true)
+    end
+
+    clean_ctx()
   end)
 end
 
