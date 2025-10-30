@@ -168,6 +168,7 @@ function def:create_win(bufnr, root_dir)
     :winopt({
       ['number'] = config.definition.number,
       ['relativenumber'] = config.definition.relativenumber,
+      ['signcolumn'] = 'no',
     })
     :wininfo()
 end
