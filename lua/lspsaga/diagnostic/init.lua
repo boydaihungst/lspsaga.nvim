@@ -71,6 +71,7 @@ function diag:get_diagnostic(opt)
     end, diagnostics)
   end
 
+  vim.lsp.buf.workspace_diagnostics()
   local items = {}
   local cwd = uv.cwd() or '.'
   for _, diagnostic in ipairs(vim.diagnostic.get()) do
