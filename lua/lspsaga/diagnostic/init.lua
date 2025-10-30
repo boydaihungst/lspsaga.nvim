@@ -392,4 +392,37 @@ function diag:goto_prev(opts)
   self:goto_pos(BACKWARD, opts)
 end
 
+function diag:send_quickfix(diags)
+  local qf_items = {}
+  local cwd = uv.cwd() or '.'
+  local current_diags = diags
+
+  while current_diags do
+    for _, diagnostic in ipairs(current_diags.diags) do
+      local buf = diagnostic.bufnr
+      if buf and vim.api.nvim_buf_is_valid(buf) then
+        local file = vim.api.nvim_buf_get_name(buf)
+        if file:sub(1, #cwd) == cwd then
+          qf_items[#qf_items + 1] = {
+            bufnr = buf,
+            filename = vim.api.nvim_buf_get_name(buf),
+            lnum = diagnostic.lnum + 1, -- diagnostics are 0-based
+            col = diagnostic.col + 1,
+            text = diagnostic.message,
+            type = ({
+              [vim.diagnostic.severity.ERROR] = 'E',
+              [vim.diagnostic.severity.WARN] = 'W',
+              [vim.diagnostic.severity.INFO] = 'I',
+              [vim.diagnostic.severity.HINT] = 'H',
+            })[diagnostic.severity],
+          }
+        end
+      end
+    end
+    current_diags = current_diags.next
+  end
+  vim.fn.setqflist(qf_items, 'r')
+  vim.cmd('copen')
+end
+
 return setmetatable(ctx, diag)

@@ -391,6 +391,9 @@ function sd:show(opt)
   util.map_keys(self.bufnr, diag_conf.keys.toggle_or_jump, function()
     self:toggle_or_jump(opt.entrys_list)
   end)
+  util.map_keys(self.bufnr, diag_conf.keys.send_to_quickfix, function()
+    diag:send_quickfix(opt.entrys_list)
+  end)
 end
 
 function sd:show_diagnostics(opt)

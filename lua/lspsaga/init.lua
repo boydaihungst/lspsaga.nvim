@@ -40,6 +40,7 @@ local default_config = {
       focus_code_action = '<C-o>',
       exec_action = 'o',
       quit = 'q',
+      send_to_quickfix = '<C-q>',
       toggle_or_jump = '<CR>',
       quit_in_show = { 'q', '<ESC>' },
     },
