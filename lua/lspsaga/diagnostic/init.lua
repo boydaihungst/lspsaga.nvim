@@ -1,4 +1,5 @@
 local api, lsp = vim.api, vim.lsp
+local uv = vim.uv or vim.loop
 local config = require('lspsaga').config
 local act = require('lspsaga.codeaction')
 local win = require('lspsaga.window')
@@ -54,10 +55,9 @@ function diag:get_diagnostic(opt)
   end
 
   local line, col = unpack(api.nvim_win_get_cursor(0))
-  local entrys = vim.diagnostic.get(cur_buf, { lnum = line - 1 })
 
   if opt.line then
-    return entrys
+    return vim.diagnostic.get(cur_buf, { lnum = line - 1 })
   end
 
   if opt.cursor then
@@ -71,7 +71,18 @@ function diag:get_diagnostic(opt)
     end, diagnostics)
   end
 
-  return vim.diagnostic.get()
+  local items = {}
+  local cwd = uv.cwd() or '.'
+  for _, diagnostic in ipairs(vim.diagnostic.get()) do
+    local buf = diagnostic.bufnr
+    if buf and vim.api.nvim_buf_is_valid(buf) then
+      local file = vim.api.nvim_buf_get_name(buf)
+      if file:sub(1, #cwd) == cwd then
+        items[#items + 1] = diagnostic
+      end
+    end
+  end
+  return items
 end
 
 function diag:code_action_cb(action_tuples, enriched_ctx, win_conf)
