@@ -72,6 +72,29 @@ function diag:get_diagnostic(opt)
   end
 
   vim.lsp.buf.workspace_diagnostics()
+  local timeout = 10000
+
+  local function has_pending()
+    for _, client in
+      pairs(vim.lsp.get_clients({ bufnr = cur_buf, method = { 'workspace/diagnostic' } }))
+    do
+      local reqs = client.requests or {}
+      for _, req in pairs(reqs) do
+        if req.type == 'pending' then
+          return true
+        end
+      end
+    end
+    return false
+  end
+  local ok = vim.wait(timeout, function()
+    return not has_pending()
+  end, 50, false)
+
+  if not ok then
+    vim.notify('Timed out waiting for workspace/diagnostic to finish', vim.log.levels.WARN)
+  end
+
   local items = {}
   local cwd = uv.cwd() or '.'
   for _, diagnostic in ipairs(vim.diagnostic.get()) do
