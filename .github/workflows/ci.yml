@@ -30,10 +30,10 @@ jobs:
         uses: kdheepak/panvimdoc@main
         with:
           vimdoc: lspsaga.nvim
-          version: Nvim 0.8.0
+          version: Nvim 0.12.0
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: 'chore(doc): auto generate docs'
+          commit_message: "chore(doc): auto generate docs"
           commit_user_name: "github-actions[bot]"
           commit_user_email: "github-actions[bot]@users.noreply.github.com"
           commit_author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
