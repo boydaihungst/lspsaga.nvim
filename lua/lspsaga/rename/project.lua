@@ -127,7 +127,7 @@ local function render(chunks, new_name)
   local bufnr, winid = create_win()
 
   for fname, item in pairs(result) do
-    fname = util.path_sub(fname, get_root_dir())
+    local fname = util.path_sub(fname, get_root_dir())
     api.nvim_buf_set_lines(bufnr, line - 1, line - 1, false, { fname })
     vim.hl.range(bufnr, ns, 'SagaFinderFname', { line - 1, 0 }, { line - 1, -1 })
     line = line + 1

@@ -27,6 +27,7 @@ local function path_in_bar(buf)
   end
 
   for item in util.path_itera(buf) do
+    local item = item
     if string.find(item, '%%') then
       item = item:gsub('%%', '%%%%')
     end

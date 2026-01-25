@@ -71,6 +71,7 @@ function hover:open_floating_preview(content, option_fn)
   local in_codeblock = false
 
   for _, line in ipairs(content) do
+    local line = line
     if line:find('\\') then
       line = line:gsub('\\(?![tn])', '')
     end
