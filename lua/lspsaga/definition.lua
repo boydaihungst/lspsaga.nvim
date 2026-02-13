@@ -157,6 +157,7 @@ function def:create_win(bufnr, root_dir)
       :wininfo()
   end
   local win_conf = api.nvim_win_get_config(self.list[#self.list].winid)
+  ---@diagnostic disable-next-line: inject-field
   win_conf.bufnr = bufnr
   win_conf.title = fname
   win_conf.row = win_conf.row + 1

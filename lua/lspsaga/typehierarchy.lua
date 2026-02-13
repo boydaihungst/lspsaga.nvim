@@ -255,7 +255,7 @@ function ch:keymap()
       if not string.match(uri, '^[^:]+://') then -- not uri
         uri = vim.uri_from_fname(uri)
       end
-      vim.lsp.util.jump_to_location({
+      vim.lsp.util.show_document({
         uri = uri,
         range = {
           start = start,
@@ -462,14 +462,14 @@ function ch:send_prepare_type()
 
     local choice = vim.fn.inputlist(client_items)
     if choice == 0 or choice > #clients then
-      api.nvim_err_writeln('[Lspsaga] wrong choice for select client')
+      api.nvim_echo({ { '[Lspsaga] wrong choice for select client' } }, true, { err = true })
       return
     end
     client = clients[choice]
   end
   self.list = slist.new()
 
-  local params = lsp.util.make_position_params()
+  local params = lsp.util.make_position_params(0, client.offset_encoding)
   client:request(get_method(1), params, function(_, result, ctx)
     if api.nvim_get_current_buf() ~= ctx.bufnr then
       return

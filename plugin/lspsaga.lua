@@ -2,7 +2,7 @@ if vim.g.lspsaga_version then
   return
 end
 
-vim.g.lspsaga_version = '0.3.1'
+vim.g.lspsaga_version = '0.3.2'
 
 vim.api.nvim_create_user_command('Lspsaga', function(args)
   require('lspsaga.command').load_command(args.fargs[1], vim.list_slice(args.fargs, 2))

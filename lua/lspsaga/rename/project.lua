@@ -167,11 +167,14 @@ function M:new(args)
     return
   end
 
+  ---@diagnostic disable-next-line: missing-fields
   handle, _ = uv.spawn('rg', {
     args = { args[1], root_dir, '--json', unpack(args[3]) },
     stdio = { stdin, stdout, stderr },
   }, function(_, _)
+    ---@diagnostic disable-next-line: param-type-mismatch
     uv.read_stop(stdout)
+    ---@diagnostic disable-next-line: param-type-mismatch
     uv.read_stop(stderr)
     safe_close(handle)
     safe_close(stdout)
@@ -182,6 +185,7 @@ function M:new(args)
     end)
   end)
 
+  ---@diagnostic disable-next-line: param-type-mismatch
   uv.read_start(stdout, function(err, data)
     assert(not err, err)
 

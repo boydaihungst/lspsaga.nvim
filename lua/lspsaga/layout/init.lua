@@ -94,7 +94,7 @@ function M:done(fn)
 end
 
 function M:close()
-  for i, id in ipairs({ self.left_winid, self.right_winid }) do
+  for _, id in ipairs({ self.left_winid, self.right_winid }) do
     -- if i == 1 and id and api.nvim_win_is_valid(id) then
     --   pcall(api.nvim_win_close, id, true)
     -- elseif i == 2 and self.layout ~= 'dropdown' and id and api.nvim_win_is_valid(id) then

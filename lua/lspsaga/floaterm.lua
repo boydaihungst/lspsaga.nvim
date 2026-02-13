@@ -44,7 +44,7 @@ function term:open_float_terminal(args)
 
   if not spawn_new then
     float_opt.bufnr = ctx.term_bufnr
-    api.nvim_buf_set_option(ctx.term_bufnr, 'modified', false)
+    api.nvim_set_option_value('modified', false, { buf = ctx.term_bufnr })
   end
   ctx.cur_win = api.nvim_get_current_win()
   ctx.pos = api.nvim_win_get_cursor(0)
@@ -70,7 +70,7 @@ function term:open_float_terminal(args)
     if dir then
       termopen_opts.cwd = dir
     end
-    vim.fn.termopen(cmd, termopen_opts)
+    vim.fn.jobstart(cmd, termopen_opts)
   end
 
   vim.cmd('startinsert!')

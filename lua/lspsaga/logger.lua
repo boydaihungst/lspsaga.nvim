@@ -30,7 +30,11 @@ end
 
 function log:write()
   local fd = uv.fs_open(self.logfile, 'w', 438)
-  uv.fs_write(fd, self.content, function(err, bytes)
+  if not fd then
+    error('[Lspsaga] write to log failed')
+    return
+  end
+  uv.fs_write(fd, self.content, -1, function(err, bytes)
     if err then
       error('[Lspsaga] write to log failed')
     end

@@ -164,6 +164,7 @@ function M.map_keys(buffer, keys, rhs, modes, opts)
       string.format('[Lspsaga] key map and buffer "%s" cannot be empty', buffer),
       vim.log.levels.WARN
     )
+    return
   end
 
   opts = opts or {}
