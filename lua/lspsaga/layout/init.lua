@@ -94,13 +94,12 @@ function M:done(fn)
 end
 
 function M:close()
-  for _, id in ipairs({ self.left_winid, self.right_winid }) do
-    -- if i == 1 and id and api.nvim_win_is_valid(id) then
-    --   pcall(api.nvim_win_close, id, true)
-    -- elseif i == 2 and self.layout ~= 'dropdown' and id and api.nvim_win_is_valid(id) then
-    --   pcall(api.nvim_win_close, id, true)
-    -- end
-    pcall(api.nvim_win_close, id, true)
+  for i, id in ipairs({ self.left_winid, self.right_winid }) do
+    if i == 1 and id and api.nvim_win_is_valid(id) then
+      pcall(api.nvim_win_close, id, true)
+    elseif i == 2 and self.layout ~= 'dropdown' and id and api.nvim_win_is_valid(id) then
+      pcall(api.nvim_win_close, id, true)
+    end
   end
   self.left_winid = nil
   self.right_winid = nil

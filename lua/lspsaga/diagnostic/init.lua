@@ -72,7 +72,7 @@ function diag:get_diagnostic(opt)
   end
 
   vim.lsp.buf.workspace_diagnostics()
-  local timeout = 30000
+  local timeout = 10000
 
   local function has_pending()
     for _, client in pairs(vim.lsp.get_clients({ method = { 'workspace/diagnostic' } })) do

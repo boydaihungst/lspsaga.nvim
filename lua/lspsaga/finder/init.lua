@@ -51,7 +51,11 @@ function fd:init_layout()
         ['bufhidden'] = 'wipe',
         ['modifiable'] = true,
       })
-      :winopt('wrap', false)
+      :winopt({
+        ['number'] = true,
+        ['signcolumn'] = 'yes',
+        ['wrap'] = true,
+      })
       :right()
       :bufopt({
         ['buftype'] = 'nofile',
