@@ -5,6 +5,7 @@ local util = require('lspsaga.util')
 local nvim_buf_set_extmark = api.nvim_buf_set_extmark
 local inrender_row = -1
 local inrender_buf = nil
+local cancel_code_action = nil
 
 local function get_name()
   return 'SagaLightBulb'
@@ -112,24 +113,33 @@ local function render(bufnr)
     diagnostics = diagnostic_vim_to_lsp(vim.diagnostic.get(bufnr, { lnum = row })),
   }
 
-  lsp.buf_request(bufnr, 'textDocument/codeAction', params, function(_, result, ctx)
-    if api.nvim_get_current_buf() ~= bufnr then
-      return
-    end
-
-    if ctx and ctx.client_id then
-      local client = lsp.get_client_by_id(ctx.client_id)
-      if client and vim.tbl_contains(config.lightbulb.ignore.clients, client.name) then
+  if cancel_code_action then
+    cancel_code_action()
+    cancel_code_action = nil
+  end
+  _, cancel_code_action = lsp.buf_request(
+    bufnr,
+    'textDocument/codeAction',
+    params,
+    function(_, result, ctx)
+      if api.nvim_get_current_buf() ~= bufnr then
         return
       end
-    end
 
-    if result and #result > 0 then
-      update_lightbulb(bufnr, row)
-    else
-      update_lightbulb(bufnr, nil)
+      if ctx and ctx.client_id then
+        local client = lsp.get_client_by_id(ctx.client_id)
+        if client and vim.tbl_contains(config.lightbulb.ignore.clients, client.name) then
+          return
+        end
+      end
+
+      if result and #result > 0 then
+        update_lightbulb(bufnr, row)
+      else
+        update_lightbulb(bufnr, nil)
+      end
     end
-  end)
+  )
 end
 
 local timer = assert(uv.new_timer())
