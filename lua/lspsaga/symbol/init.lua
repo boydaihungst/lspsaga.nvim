@@ -87,8 +87,18 @@ function symbol:do_request(buf, client_id)
     }
   end
 
+  local support_method = client:supports_method('textDocument/documentSymbol', buf)
+  if not support_method then
+    if self[buf] then
+      self[buf].pending_request = false
+    end
+  end
+
   client:request('textDocument/documentSymbol', params, function(err, result, ctx)
     if not api.nvim_buf_is_loaded(ctx.bufnr) or not self[ctx.bufnr] then
+      if self[ctx.bufnr] then
+        self[ctx.bufnr].pending_request = false
+      end
       return
     end
     self[ctx.bufnr].pending_request = false

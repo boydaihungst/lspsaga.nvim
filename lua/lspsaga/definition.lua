@@ -227,6 +227,9 @@ function def:definition_request(method, handler_T, args)
   end
   self.pending_request = true
   local count = #util.get_client_by_method(method)
+  if count == 0 then
+    self.pending_request = false
+  end
 
   lsp.buf_request(current_buf, method, params, function(_, result, context)
     self.pending_request = false

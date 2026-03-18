@@ -268,6 +268,11 @@ function act:send_request(main_buf, options, callback)
   params.context = context
   local enriched_ctx = { bufnr = main_buf, method = 'textDocument/codeAction', params = params }
 
+  local count = #util.get_client_by_method('textDocument/codeAction')
+  if count == 0 then
+    self.pending_request = false
+  end
+
   lsp.buf_request_all(main_buf, 'textDocument/codeAction', params, function(results)
     self.pending_request = false
     local action_tuples = {}

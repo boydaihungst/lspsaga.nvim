@@ -359,6 +359,11 @@ end
 
 function ch:call_hierarchy(item, client, timer_close, curlnum)
   self.pending_request = true
+  local support_method = client:supports_method(self.method)
+  if not support_method then
+    self.pending_request = false
+  end
+
   client:request(self.method, { item = item }, function(_, res)
     self.pending_request = false
     curlnum = curlnum or 0
