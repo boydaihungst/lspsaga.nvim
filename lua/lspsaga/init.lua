@@ -95,6 +95,7 @@ local default_config = {
     keys = {
       shuttle = '[w',
       toggle_or_open = 'o',
+      send_to_quickfix = '<C-q>',
       vsplit = 's',
       split = 'i',
       tabe = 't',

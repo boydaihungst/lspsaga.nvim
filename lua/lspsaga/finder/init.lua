@@ -104,6 +104,7 @@ function fd:method_title(method, row)
     expand = true,
     virtid = uv.hrtime(),
     inlevel = 2,
+    title = title,
   }
   buf_set_lines(self.lbufnr, row, -1, false, { (' '):rep(2) .. title })
   self:set_highlight(n.inlevel, row)
@@ -449,7 +450,7 @@ function fd:toggle_or_open()
 end
 
 function fd:apply_maps()
-  local black = { 'close', 'toggle_or_open', 'go_peek', 'quit', 'shuttle' }
+  local black = { 'close', 'toggle_or_open', 'go_peek', 'quit', 'shuttle', 'send_to_quickfix' }
   for action, key in pairs(config.finder.keys) do
     util.map_keys(self.lbufnr, key, function()
       if not vim.tbl_contains(black, action) then
@@ -525,6 +526,11 @@ function fd:apply_maps()
     local curbuf = api.nvim_get_current_buf()
     vim.lsp.buf_attach_client(curbuf, curnode.value.client_id)
   end)
+
+  util.map_keys(self.lbufnr, config.finder.keys.send_to_quickfix, function()
+    fd:send_quickfix(self.list)
+    self:clean()
+  end)
 end
 
 function fd:new(args)
@@ -597,6 +603,57 @@ function fd:new(args)
       vim.notify('[Lspsaga] finder no any results to show', vim.log.levels.WARN)
     end
   end))
+end
+
+function fd:send_quickfix(list)
+  local qf_items = {}
+  local node = list
+  -- local type = ''
+
+  while true do
+    if not node or not node.value then
+      break
+    end
+    if node.value.expand ~= true then
+      if not node.value.bufnr then
+        break
+      end
+      local buf = node.value.bufnr
+      if buf and vim.api.nvim_buf_is_valid(buf) then
+        local range = node.value.selectionRange
+          or node.value.range
+          or node.value.targetSelectionRange
+
+        local client = vim.lsp.get_client_by_id(node.value.client_id)
+        if not client then
+          goto continue
+        end
+        local col = lsp.util._get_line_byte_from_position(
+          node.value.bufnr,
+          range.start,
+          client.offset_encoding
+        )
+        local fname = vim.uri_to_fname(node.value.uri or node.value.targetUri)
+        qf_items[#qf_items + 1] = {
+          bufnr = buf,
+          filename = fname,
+          lnum = range.start.line + 1,
+          end_lnum = range['end'].line + 1,
+          col = col + 1,
+          text = node.value.line,
+          type = 'I',
+          -- module = type .. ' ┃ ' .. fname,
+        }
+      end
+    elseif node.value.title then
+      -- type = node.value.title or ''
+    end
+    ::continue::
+    node = node.next
+  end
+
+  vim.fn.setqflist(qf_items, 'r')
+  vim.cmd('copen')
 end
 
 return setmetatable(ctx, fd)
