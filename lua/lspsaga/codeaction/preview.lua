@@ -203,7 +203,21 @@ local function action_preview(main_winid, main_buf, tuple)
     api.nvim_buf_set_lines(preview_buf, 0, -1, false, diff)
     vim.bo[preview_buf].modifiable = false
     local win_conf = api.nvim_win_get_config(preview_winid)
-    win_conf.height = math.min(win_conf.height, #diff)
+
+    -- Get dimensions of the main window
+    local winheight = api.nvim_win_get_height(win_conf.win)
+    local margin = config.ui.border == 'none' and 0 or 2
+    local north = win_conf.anchor:sub(1, 1) == 'N'
+    local row = win_conf.row
+
+    -- Calculate available space above (valid_top_height) and below (valid_bot_height)
+    local valid_top_height = math.max(0, row - margin)
+    local valid_bot_height = north and (winheight - row - win_conf.height - margin)
+      or (winheight - row - margin)
+
+    -- Determine the preview window height
+    local new_win_height = #diff + margin
+    win_conf.height = math.min(new_win_height, math.max(valid_bot_height, valid_top_height))
     local new_width = util.get_max_content_length(diff)
     local main_width = api.nvim_win_get_width(main_winid)
     win_conf.width = new_width < main_width and main_width or new_width
