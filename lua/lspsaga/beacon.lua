@@ -8,7 +8,7 @@ local function jump_beacon(bufpos, width)
     return
   end
 
-  if width == 0 or not width then
+  if width <= 0 or not width then
     return
   end
 
