@@ -357,7 +357,7 @@ function diag:goto_pos(pos, opts)
           or diagnostic.message
       end,
       header = '',
-      prefix = { '• ', 'Title' },
+      prefix = { ' • ', 'Title' },
     },
   }, opts or {}))
 
