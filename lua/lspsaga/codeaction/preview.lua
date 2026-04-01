@@ -128,7 +128,7 @@ local function create_preview_win(content, main_winid)
   if north then
     if valid_top_height >= new_win_height then
       opt.anchor = 'S' .. east_or_west
-      opt.row = row
+      opt.row = row - 1
       opt.height = new_win_height
     elseif valid_bot_height >= new_win_height then
       opt.anchor = 'N' .. east_or_west
@@ -138,7 +138,7 @@ local function create_preview_win(content, main_winid)
       -- Fallback: Fit within whichever space is larger
       if valid_top_height > valid_bot_height then
         opt.anchor = 'S' .. east_or_west
-        opt.row = row
+        opt.row = row - 1
         opt.height = valid_top_height
       else
         opt.anchor = 'N' .. east_or_west
@@ -149,7 +149,7 @@ local function create_preview_win(content, main_winid)
   else
     if valid_bot_height >= new_win_height then
       opt.anchor = 'N' .. east_or_west
-      opt.row = row
+      opt.row = row + 1
       opt.height = new_win_height
     elseif valid_top_height >= new_win_height then
       opt.anchor = 'S' .. east_or_west
@@ -159,7 +159,7 @@ local function create_preview_win(content, main_winid)
       -- Fallback: Fit within whichever space is larger
       if valid_bot_height > valid_top_height then
         opt.anchor = 'N' .. east_or_west
-        opt.row = row
+        opt.row = row + 1
         opt.height = valid_bot_height
       else
         opt.anchor = 'S' .. east_or_west

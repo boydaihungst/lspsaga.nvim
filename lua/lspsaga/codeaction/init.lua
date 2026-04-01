@@ -4,6 +4,7 @@ local win = require('lspsaga.window')
 local preview = require('lspsaga.codeaction.preview')
 local ns = api.nvim_create_namespace('saga_action')
 local util = require('lspsaga.util')
+local group_name = 'saga_action'
 
 local act = {}
 local ctx = {}
@@ -208,10 +209,32 @@ function act:action_callback(tuples, enriched_ctx)
   -- initial position in code action window
   api.nvim_win_set_cursor(self.action_winid, { 1, 1 })
   api.nvim_win_set_hl_ns(self.action_winid, ns)
+  local group = vim.api.nvim_create_augroup(group_name, { clear = true })
   api.nvim_create_autocmd('CursorMoved', {
+    group = group,
     buffer = self.action_bufnr,
     callback = function()
       self:set_cursor(tuples)
+    end,
+  })
+
+  api.nvim_create_autocmd('WinResized', {
+    group = group,
+    callback = function(args)
+      if enriched_ctx.bufnr and enriched_ctx.bufnr == args.buf then
+        self:close_action_window()
+        clean_ctx()
+      end
+    end,
+  })
+  -- Automatically wipe the group when the buffer is wiped
+  vim.api.nvim_create_autocmd('BufWipeout', {
+    buffer = self.action_bufnr,
+    once = true,
+    callback = function()
+      vim.api.nvim_del_augroup_by_name(group_name)
+      self:close_action_window()
+      clean_ctx()
     end,
   })
   for i = 1, #content, 1 do
