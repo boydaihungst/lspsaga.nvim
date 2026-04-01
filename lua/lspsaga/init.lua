@@ -51,6 +51,7 @@ local default_config = {
     extend_gitsigns = false,
     only_in_cursor = true,
     max_height = 0.3,
+    max_width = 1,
     cursorline = true,
     keys = {
       quit = 'q',

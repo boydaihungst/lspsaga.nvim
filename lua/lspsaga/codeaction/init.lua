@@ -94,12 +94,15 @@ function act:action_callback(tuples, enriched_ctx)
 
   local align = util.align
   local section_padding = '  '
-  local max_index, name_max_len, group_max_len = util.num_len(#tuples), 0, 0
+  local max_index, name_max_len, group_max_len, server_max_len = util.num_len(#tuples), 0, 0, 0
+  local max_valid_width = math.floor(api.nvim_win_get_width(0) * config.code_action.max_width)
   for _, client_with_actions in ipairs(tuples) do
     if client_with_actions[2].name then
+      client_with_actions[2].name = client_with_actions[2].name:gsub('\n%s*', '')
       local name_len = api.nvim_strwidth(client_with_actions[2].name .. section_padding)
       name_max_len = math.max(name_len, name_max_len)
     elseif client_with_actions[2].title then
+      client_with_actions[2].title = client_with_actions[2].title:gsub('\n%s*', '')
       local title_len = api.nvim_strwidth(client_with_actions[2].title .. section_padding)
       name_max_len = math.max(title_len, name_max_len)
     end
@@ -108,6 +111,15 @@ function act:action_callback(tuples, enriched_ctx)
         api.nvim_strwidth((client_with_actions[2].group .. section_padding) or section_padding)
       group_max_len = math.max(group_len, group_max_len)
     end
+    if config.code_action.show_server_name == true then
+      local serve_len = api.nvim_strwidth(
+        type(client_with_actions[1]) == 'string' and client_with_actions[1]
+          or lsp.get_client_by_id(client_with_actions[1]).name
+      )
+      server_max_len = math.max(server_max_len, serve_len)
+    end
+    name_max_len =
+      math.min(max_valid_width - server_max_len - group_max_len - max_index, name_max_len)
   end
   for index, client_with_actions in ipairs(tuples) do
     local action_title = ''
@@ -119,13 +131,33 @@ function act:action_callback(tuples, enriched_ctx)
     if client_with_actions[2].name or client_with_actions[2].title then
       action_title = align(' **' .. tostring(index) .. '**' .. section_padding, max_index + 7) -- 7 is ` **` + `**` + section_padding
         .. align(
-          (client_with_actions[2].name or client_with_actions[2].title or '') .. section_padding,
+          (client_with_actions[2].name or client_with_actions[2].title or ''),
           name_max_len
             + act:concealed_markdown_len(
-              (client_with_actions[2].name or client_with_actions[2].title or '')
-            )
+              align(
+                (client_with_actions[2].name or client_with_actions[2].title or ''),
+                name_max_len,
+                { truncate = true }
+              )
+            ),
+          { truncate = true }
         )
-        .. align((client_with_actions[2].group or '') .. ' ', group_max_len)
+      if action_title:match('…$') then
+        local _, count = action_title:gsub('`', '')
+        if count % 2 ~= 0 then
+          if action_title:match('`…$') then
+            action_title = action_title:sub(1, -3) .. '… '
+          else
+            action_title = action_title:gsub('(…)$', '`%1 ')
+          end
+        else
+          action_title = action_title
+        end
+      end
+
+      action_title = action_title .. section_padding
+      action_title = action_title
+        .. align((client_with_actions[2].group or '') .. section_padding, group_max_len)
     end
     if config.code_action.show_server_name == true then
       action_title = action_title
@@ -165,7 +197,7 @@ function act:action_callback(tuples, enriched_ctx)
       ['buftype'] = 'nofile',
       ['bufhidden'] = 'wipe',
       ['modifiable'] = false,
-      ['filetype'] = 'markdown',
+      ['filetype'] = 'sagacodeaction',
     })
     :winopt({
       ['conceallevel'] = 3,

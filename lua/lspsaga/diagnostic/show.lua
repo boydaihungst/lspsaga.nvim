@@ -175,12 +175,12 @@ function sd:layout_float(opt)
   self.bufnr, self.winid = win
     :new_float(float_opt, enter)
     :bufopt({
-      ['filetype'] = 'markdown',
+      ['filetype'] = 'sagadiagnostic',
       ['modifiable'] = false,
       ['buftype'] = 'nofile',
     })
     :winopt({
-      ['conceallevel'] = 2,
+      ['conceallevel'] = 3,
       ['concealcursor'] = 'niv',
       ['wrap'] = diag_conf.wrap_long_lines,
     })

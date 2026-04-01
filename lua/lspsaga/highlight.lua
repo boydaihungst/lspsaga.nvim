@@ -87,6 +87,10 @@ local function init_highlight()
   end
   api.nvim_set_hl(0, 'SagaButton', { fg = hint_conf.fg })
   api.nvim_set_hl(0, 'SagaActionTitle', { fg = 'Black', bg = hint_conf.fg })
+  vim.treesitter.language.register(
+    'markdown_inline',
+    { 'sagatypehierarchy', 'sagadiagnostic', 'sagacodeaction' }
+  )
 end
 
 return {
