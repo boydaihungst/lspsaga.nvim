@@ -91,6 +91,12 @@ local function init_highlight()
     'markdown_inline',
     { 'sagatypehierarchy', 'sagadiagnostic', 'sagacodeaction' }
   )
+  vim.api.nvim_create_autocmd('FileType', {
+    pattern = { 'sagatypehierarchy', 'sagadiagnostic', 'sagacodeaction' },
+    callback = function(ev)
+      vim.treesitter.start(ev.buf)
+    end,
+  })
 end
 
 return {
