@@ -16,6 +16,12 @@ local subcommands = {
   goto_type_definition = function(args)
     require('lspsaga.definition'):init(2, 2, args)
   end,
+  peek_declaration = function()
+    require('lspsaga.definition'):init(3, 1)
+  end,
+  goto_declaration = function(args)
+    require('lspsaga.definition'):init(3, 2, args)
+  end,
   rename = function(args)
     require('lspsaga.rename'):lsp_rename(args)
   end,

@@ -21,7 +21,8 @@ local function clean_ctx()
 end
 
 local function get_method(index)
-  local tbl = { 'textDocument/definition', 'textDocument/typeDefinition' }
+  local tbl =
+    { 'textDocument/definition', 'textDocument/typeDefinition', 'textDocument/declaration' }
   return tbl[index]
 end
 
