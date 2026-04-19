@@ -321,6 +321,7 @@ local original_open_float = vim.diagnostic.open_float
 ---@diagnostic disable-next-line: duplicate-set-field
 vim.diagnostic.open_float = function(opts, ...)
   diag.float_bufnr, diag.float_winid = original_open_float(opts, ...)
+  return diag.float_bufnr, diag.float_winid
 end
 
 ---@return boolean valid
