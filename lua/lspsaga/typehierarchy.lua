@@ -26,7 +26,8 @@ function ch:clean()
     end
     if node.value.bufnr and api.nvim_buf_is_valid(node.value.bufnr) and node.value.rendered then
       api.nvim_buf_clear_namespace(node.value.bufnr, ns, 0, -1)
-      pcall(api.nvim_buf_del_keymap, node.value.bufnr, 'n', config.finder.keys.close)
+      util.delete_keymaps(node.value.bufnr, config.typehierarchy.keys.close)
+      util.delete_keymaps(node.value.bufnr, config.typehierarchy.keys.shuttle)
     end
   end)
 

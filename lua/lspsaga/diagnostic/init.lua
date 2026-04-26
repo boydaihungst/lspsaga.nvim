@@ -208,6 +208,11 @@ function diag:code_action_cb(action_tuples, enriched_ctx, win_conf)
         local tuple = action_tuples[num]
         vim.hl.range(self.float_bufnr, ns, 'SagaSelect', { curline - 1, 6 }, { curline - 1, -1 })
         action_preview(self.float_winid, self.main_buf, tuple)
+      elseif curline <= start_line and #action_tuples > 0 then
+        if self.float_winid and api.nvim_win_is_valid(self.float_winid) then
+          vim.api.nvim_win_set_cursor(self.float_winid, { start_line + 1, 1 })
+          vim.hl.range(self.float_bufnr, ns, 'SagaSelect', { start_line, 6 }, { start_line, -1 })
+        end
       end
     end,
     desc = 'Lspsaga show code action preview in diagnostic window',
@@ -220,9 +225,11 @@ function diag:code_action_cb(action_tuples, enriched_ctx, win_conf)
       api.nvim_buf_clear_namespace(self.float_bufnr, ns, 0, -1)
       local sline = start_line + 1
       local col = 6
-      if curlnum < sline then
+      if curlnum + direction > lines then
         curlnum = sline
-      elseif curlnum >= sline then
+      elseif curlnum + direction <= start_line then
+        curlnum = lines
+      else
         curlnum = curlnum + direction > lines and sline or curlnum + direction
       end
       api.nvim_win_set_cursor(self.float_winid, { curlnum, col })
@@ -241,11 +248,22 @@ function diag:code_action_cb(action_tuples, enriched_ctx, win_conf)
     self:do_code_action(action_tuples, enriched_ctx)
   end)
 
+  util.map_keys(self.main_buf, diag_conf.keys.exec_action, function()
+    api.nvim_set_current_win(self.float_winid)
+    self:do_code_action(action_tuples, enriched_ctx)
+  end)
+
   util.map_keys(self.main_buf, diag_conf.keys.focus_code_action, function()
     if self.float_winid and api.nvim_win_is_valid(self.float_winid) then
       api.nvim_set_current_win(self.float_winid)
-      api.nvim_win_set_cursor(self.float_winid, { start_line + 1, 0 })
-      vim.hl.range(self.float_bufnr, ns, 'SagaSelect', { start_line, 6 }, { start_line, -1 })
+      local cursor = vim.api.nvim_win_get_cursor(0)
+
+      if cursor[1] <= start_line then
+        vim.api.nvim_win_set_cursor(self.float_winid, { start_line + 1, 1 })
+        vim.hl.range(self.float_bufnr, ns, 'SagaSelect', { start_line, 6 }, { start_line, -1 })
+      else
+        vim.api.nvim_win_set_cursor(self.float_winid, { cursor[1], 2 })
+      end
       action_preview(self.float_winid, curbuf, action_tuples[1])
     end
   end)
@@ -305,10 +323,16 @@ function diag:do_code_action(action_tuples, enriched_ctx)
   self:clean_data()
 end
 
+local function delete_main_buf_keymap(bufnr)
+  api.nvim_buf_del_keymap(bufnr, 'n', diag_conf.keys.focus_code_action)
+  api.nvim_buf_del_keymap(bufnr, 'n', diag_conf.keys.exec_action)
+end
+
 function diag:clean_data()
   util.close_win(self.float_winid)
   preview_win_close()
   pcall(util.delete_scroll_map, self.main_buf)
+  pcall(delete_main_buf_keymap, self.main_buf)
   if self.number_count then
     for i = 1, self.number_count do
       nvim_buf_del_keymap(self.main_buf, 'n', tostring(i))
@@ -368,7 +392,7 @@ function diag:goto_pos(pos, opts)
     if not self:valid_win_buf() then
       return
     end
-    vim.bo[self.float_bufnr].filetype = 'markdown'
+    vim.bo[self.float_bufnr].filetype = 'sagadiagnostic'
     vim.wo[self.float_winid].conceallevel = 3
     vim.wo[self.float_winid].cocu = 'niv'
     vim.bo[self.float_bufnr].bufhidden = 'wipe'

@@ -310,9 +310,6 @@ function fd:event()
         self:clean()
       end)
       util.map_keys(node.value.bufnr, config.finder.keys.shuttle, function()
-        if api.nvim_get_current_win() ~= self.rwinid then
-          return
-        end
         vim.opt.eventignore:append('BufEnter')
         api.nvim_set_current_win(self.lwinid)
         vim.opt.eventignore:remove('BufEnter')
@@ -355,7 +352,8 @@ function fd:clean()
     end
     if node.value.bufnr and api.nvim_buf_is_valid(node.value.bufnr) and node.value.rendered then
       api.nvim_buf_clear_namespace(node.value.bufnr, ns, 0, -1)
-      pcall(api.nvim_buf_del_keymap, node.value.bufnr, 'n', config.finder.keys.close)
+      util.delete_keymaps(node.value.bufnr, config.finder.keys.close)
+      util.delete_keymaps(node.value.bufnr, config.finder.keys.shuttle)
     end
   end)
   clean_ctx()
@@ -496,7 +494,7 @@ function fd:apply_maps()
         return
       end
 
-      if action == 'quit' then
+      if action == 'quit' or action == 'close' then
         self:clean()
         return
       end

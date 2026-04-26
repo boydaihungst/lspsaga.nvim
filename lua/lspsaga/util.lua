@@ -89,6 +89,15 @@ function M.scroll_in_float(bufnr, winid)
   end
 end
 
+function M.delete_keymaps(bufnr, keys, modes)
+  modes = modes or 'n'
+  for _, key in ipairs(M.as_table(keys)) do
+    for _, mode in ipairs(M.as_table(modes)) do
+      pcall(api.nvim_buf_del_keymap, bufnr, mode, key)
+    end
+  end
+end
+
 function M.delete_scroll_map(bufnr)
   local config = require('lspsaga').config
   api.nvim_buf_del_keymap(bufnr, 'n', config.scroll_preview.scroll_down)
@@ -153,13 +162,13 @@ function M.as_table(value)
 end
 
 --- Creates a buffer local mapping.
----@param buffer number
+---@param buffer number|table<number>
 ---@param keys string|table<string>
 ---@param rhs string|function
 ---@param modes string|table<string>|nil
 ---@param opts table|nil
 function M.map_keys(buffer, keys, rhs, modes, opts)
-  if not keys or keys == '' or buffer == nil then
+  if not keys or keys == '' or buffer == nil or (type(buffer) == 'table' and #buffer == 0) then
     vim.notify(
       string.format('[Lspsaga] key map and buffer "%s" cannot be empty', buffer),
       vim.log.levels.WARN
@@ -179,7 +188,9 @@ function M.map_keys(buffer, keys, rhs, modes, opts)
 
   for _, mode in ipairs(M.as_table(modes)) do
     for _, lhs in ipairs(M.as_table(keys)) do
-      api.nvim_buf_set_keymap(buffer, mode, lhs, rhs, opts)
+      for _, b in ipairs(M.as_table(buffer)) do
+        api.nvim_buf_set_keymap(b, mode, lhs, rhs, opts)
+      end
     end
   end
 end
