@@ -176,7 +176,7 @@ function fd:handler(method, results, spin_close, done)
         range.start.line,
         0,
         range['end'].line,
-        lsp.util._get_line_byte_from_position(res.bufnr, range['end'], client.offset_encoding),
+        vim.pos.lsp(res.bufnr, range['end'], client.offset_encoding).col,
         {}
       )[1]
       res.line = res.line:gsub('^%s+', '')
@@ -268,8 +268,7 @@ function fd:event()
         return
       end
       local range = node.value.selectionRange or node.value.range or node.value.targetSelectionRange
-      local col =
-        lsp.util._get_line_byte_from_position(node.value.bufnr, range.start, client.offset_encoding)
+      local col = vim.pos.lsp(node.value.bufnr, range.start, client.offset_encoding).col
       api.nvim_win_set_cursor(self.rwinid, { range.start.line + 1, col })
       api.nvim_set_option_value('winbar', '', { scope = 'local', win = self.rwinid })
       local rwin_conf = api.nvim_win_get_config(self.rwinid)
@@ -299,11 +298,7 @@ function fd:event()
 
       vim.hl.range(node.value.bufnr, ns, 'SagaSearch', { range.start.line, col }, {
         range.start.line,
-        lsp.util._get_line_byte_from_position(
-          node.value.bufnr,
-          range['end'],
-          client.offset_encoding
-        ),
+        vim.pos.lsp(node.value.bufnr, range['end'], client.offset_encoding).col,
       })
       node.value.rendered = true
       util.map_keys(node.value.bufnr, config.finder.keys.close, function()
@@ -375,11 +370,7 @@ function fd:toggle_or_open()
       local range = node.value.selectionRange or node.value.range or node.value.targetSelectionRange
       local pos = {
         range.start.line + 1,
-        lsp.util._get_line_byte_from_position(
-          node.value.bufnr,
-          range.start,
-          client.offset_encoding
-        ),
+        vim.pos.lsp(node.value.bufnr, range.start, client.offset_encoding).col,
       }
       local callerwinid = self.callerwinid
       self:clean()
@@ -468,11 +459,7 @@ function fd:apply_maps()
 
         local pos = {
           range.start.line + 1,
-          lsp.util._get_line_byte_from_position(
-            curnode.value.bufnr,
-            range.start,
-            client.offset_encoding
-          ),
+          vim.pos.lsp(curnode.value.bufnr, range.start, client.offset_encoding).col,
         }
         local inexist = self.inexist
         self:clean()
@@ -626,11 +613,7 @@ function fd:send_quickfix(list)
         if not client then
           goto continue
         end
-        local col = lsp.util._get_line_byte_from_position(
-          node.value.bufnr,
-          range.start,
-          client.offset_encoding
-        )
+        local col = vim.pos.lsp(node.value.bufnr, range.start, client.offset_encoding).col
         local fname = vim.uri_to_fname(node.value.uri or node.value.targetUri)
         qf_items[#qf_items + 1] = {
           bufnr = buf,

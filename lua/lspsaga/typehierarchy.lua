@@ -306,11 +306,7 @@ function ch:peek_view()
       if not client then
         return
       end
-      local col = lsp.util._get_line_byte_from_position(
-        curnode.value.bufnr,
-        range.start,
-        client.offset_encoding
-      )
+      local col = vim.pos.lsp(curnode.value.bufnr, range.start, client.offset_encoding).col
 
       local right_bufnr = vim.api.nvim_win_get_buf(self.right_winid)
       local total_lines = vim.api.nvim_buf_line_count(right_bufnr)
@@ -319,11 +315,7 @@ function ch:peek_view()
       end
       vim.hl.range(curnode.value.bufnr, ns, 'SagaSearch', { range.start.line, col }, {
         range.start.line,
-        lsp.util._get_line_byte_from_position(
-          curnode.value.bufnr,
-          range['end'],
-          client.offset_encoding
-        ),
+        vim.pos.lsp(curnode.value.bufnr, range['end'], client.offset_encoding).col,
       })
       util.map_keys(curnode.value.bufnr, config.typehierarchy.keys.shuttle, function()
         window_shuttle(self.left_winid, self.right_winid)
@@ -477,7 +469,7 @@ function ch:send_prepare_type()
   end
   self.list = slist.new()
 
-  local params = lsp.util.make_position_params(0, client.offset_encoding)
+  local params = lsp.util.make_position_params(0, util.get_offset_encoding({ client = clients[1] }))
   client:request(get_method(1), params, function(_, result, ctx)
     if api.nvim_get_current_buf() ~= ctx.bufnr then
       return

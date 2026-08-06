@@ -102,7 +102,7 @@ function def:apply_maps(bufnr)
         if not config.definition.save_pos then
           pos = {
             start.line + 1,
-            lsp.util._get_line_byte_from_position(0, start, client.offset_encoding),
+            vim.pos.lsp(0, start, client.offset_encoding).col,
           }
         end
         api.nvim_win_set_cursor(0, pos)
@@ -232,7 +232,7 @@ function def:definition_request(method, handler_T, args)
     self.pending_request = false
   end
 
-  lsp.buf_request(current_buf, method, params, function(_, result, context)
+  lsp.buf_request(current_buf, method, params, function(err, result, context)
     self.pending_request = false
     count = count - 1
     if not result or vim.tbl_count(result) == 0 then
@@ -292,11 +292,7 @@ function def:peek_handler(result, context)
   end
   api.nvim_win_set_cursor(node.winid, {
     node.selectionRange.start.line + 1,
-    lsp.util._get_line_byte_from_position(
-      node.bufnr,
-      node.selectionRange.start,
-      client.offset_encoding
-    ),
+    vim.pos.lsp(node.bufnr, node.selectionRange.start, client.offset_encoding).col,
   })
   self:apply_maps(node.bufnr)
   self.list[#self.list + 1] = node
@@ -322,7 +318,7 @@ function def:goto_handler(result, context, args)
 
   api.nvim_win_set_cursor(0, {
     range.start.line + 1,
-    lsp.util._get_line_byte_from_position(target_bufnr, range.start, client.offset_encoding),
+    vim.pos.lsp(target_bufnr, range.start, client.offset_encoding).col,
   })
   local width = #api.nvim_get_current_line()
   local col_pos = vim.fn.col('.')
